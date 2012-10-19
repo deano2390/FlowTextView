@@ -18,8 +18,6 @@ import android.text.TextPaint;
 import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.util.MonthDisplayHelper;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
@@ -453,7 +451,7 @@ public class FlowTextView extends RelativeLayout {
 				+ mSpacingAdd);
 	}
 
-	private CharSequence mText;
+	private CharSequence mText = "";
 
 	private boolean mIsHtml = false;
 	//private URLSpan[] urls;
@@ -569,12 +567,9 @@ public class FlowTextView extends RelativeLayout {
 			tempFloat = thisObj.paint.measureText(thisObj.content);
 			baseXOffset+=tempFloat;			
 			objects.add(thisObj);
-		}
-
-		// now we have all the lines objects in an array but not nessecerarly in the correct order
-		//TODO
-		// calculate the widths of the items in sorterKeys and place that info into the htmlobjects in the hashmap. Then squirt those items into a sorted array list and return them for rendering.
+		}		
 	}
+	
 	float tempFloat;
 	Object[] sorterKeys;
 	int[] sortedKeys;
