@@ -18,6 +18,7 @@ import android.text.TextPaint;
 import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
@@ -40,6 +41,24 @@ public class FlowTextView extends RelativeLayout {
 		init(context);
 	}	
 
+
+
+
+	private int mColor = Color.BLACK;
+	public void setColor(int color){
+		this.mColor = color;
+
+		if(mTextPaint!=null){
+			mTextPaint.setColor(mColor);
+		}
+
+		for (TextPaint paint : mPaintHeap) {
+			paint.setColor(mColor);
+		}
+
+		this.invalidate();
+	}
+
 	private void init(Context context){		
 
 		mTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
@@ -61,31 +80,31 @@ public class FlowTextView extends RelativeLayout {
 			double distance = 0;
 
 			float x1,y1,x2,y2;
-			
+
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {			
-				
+
 				int event_code = event.getAction();
-				
+
 				if(event_code == MotionEvent.ACTION_DOWN){
 					distance = 0;
 					x1 = event.getX();
 					y1 = event.getY();					
 				}
-				
+
 				if(event_code == MotionEvent.ACTION_MOVE){
 					x2 = event.getX();
 					y2 = event.getY();
 					distance = getPointDistance(x1, y1, x2, y2);
 				}				
-				
+
 				if(distance < 10){					
 
 					if(event_code == MotionEvent.ACTION_UP){
-						
+
 						FlowTextView.this.onClick(event.getX(), event.getY());						
 					}
-					
+
 					return true;
 				}else{
 					return false;					
@@ -94,13 +113,13 @@ public class FlowTextView extends RelativeLayout {
 		});
 
 	}	
-	
+
 	private static double getPointDistance(float x1, float y1, float x2, float y2){
 		double dist = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1- y2, 2));
 		return dist;
-		
+
 	}
-	
+
 	private TextPaint mTextPaint;
 	private TextPaint mLinkPaint;
 
@@ -117,12 +136,12 @@ public class FlowTextView extends RelativeLayout {
 	private float mSpacingMult = 1.0f;
 	private float mSpacingAdd = 0.0f;
 
-	private int mViewWidth;
+	private float mViewWidth;
 
 	private class Area{
-		int x1;
-		int x2;
-		int width;
+		float x1;
+		float x2;
+		float width;
 	}
 
 
@@ -130,38 +149,38 @@ public class FlowTextView extends RelativeLayout {
 	private ArrayList<Area> mAreas = new ArrayList<FlowTextView.Area>();
 
 	private void onClick(float x, float y){		
-				
+
 		for (HtmlLink link : mLinks) {
-			 float tlX = link.xOffset;
-			 float tlY = link.yOffset;
-			 float brX = link.xOffset + link.width;
-			 float brY = link.yOffset + link.height;
-			 
-			 if(x > tlX && x < brX){
-				 if(y > tlY && y < brY){
-					 // collision
-					 onLinkClick(link.url);
-					 return;
-				 }
-			 }
-			 
+			float tlX = link.xOffset;
+			float tlY = link.yOffset;
+			float brX = link.xOffset + link.width;
+			float brY = link.yOffset + link.height;
+
+			if(x > tlX && x < brX){
+				if(y > tlY && y < brY){
+					// collision
+					onLinkClick(link.url);
+					return;
+				}
+			}
+
 		}		
 	}	
-	
+
 	private OnLinkClickListener mOnLinkClickListener;
-	
+
 	public void setOnLinkClickListener(OnLinkClickListener onLinkClickListener){
 		this.mOnLinkClickListener = onLinkClickListener;
 	}
-	
+
 	public interface OnLinkClickListener{
 		public void onLinkClick(String url);
 	}
-	
+
 	private void onLinkClick(String url){
 		if(mOnLinkClickListener!=null) mOnLinkClickListener.onLinkClick(url);
 	}
-	
+
 	private Line getLine(float lineYbottom, int lineHeight){
 
 		Line line = new Line();
@@ -237,7 +256,7 @@ public class FlowTextView extends RelativeLayout {
 
 	Area mLargestArea;
 
-	private int getChunk(String text, int maxWidth){		
+	private int getChunk(String text, float maxWidth){		
 		int length = mTextPaint.breakText(text, true, maxWidth, null);
 		if(length<=0) return length; // if its 0 or less, return it, can't fit any chars on this line
 		else if(length>=text.length()) return length; // we can fit the whole string in
@@ -264,7 +283,7 @@ public class FlowTextView extends RelativeLayout {
 	protected void onDraw(Canvas canvas) {		
 
 		super.onDraw(canvas);		
-	
+
 		mViewWidth = this.getWidth();
 		int lowestYCoord = 0;
 		boxes.clear();
@@ -280,14 +299,14 @@ public class FlowTextView extends RelativeLayout {
 			boxes.add(box);			
 			if(box.bottomRighty > lowestYCoord) lowestYCoord = box.bottomRighty;
 		}
-		
+
 		String[] blocks = mText.toString().split("\n");
 
 		int charOffsetStart = 0; // tells us where we are in the original string
 		int charOffsetEnd = 0; // tells us where we are in the original string
 		int lineIndex = 0;
-		int xOffset = 0; // left margin off a given line
-		int maxWidth = mViewWidth; // how far to the right it can strectch
+		float xOffset = 0; // left margin off a given line
+		float maxWidth = mViewWidth; // how far to the right it can strectch
 		float yOffset = 0;
 		String thisLineStr;
 		int chunkSize;
@@ -299,7 +318,7 @@ public class FlowTextView extends RelativeLayout {
 		HtmlObject htmlLine;// = new HtmlObject(); // reuse for single plain lines
 
 		mLinks.clear();
-		
+
 		for(int block_no = 0; block_no <= blocks.length-1; block_no++)
 		{		
 
@@ -316,26 +335,43 @@ public class FlowTextView extends RelativeLayout {
 					Line thisLine = getLine(yOffset, lineHeight);	
 					xOffset = thisLine.leftBound;
 					maxWidth = thisLine.rightBound - thisLine.leftBound;
+					float actualWidth = 0;
+					
 
-					chunkSize = getChunk(thisBlock, maxWidth);
-					charOffsetEnd += chunkSize;
-					if(chunkSize>1){
-						thisLineStr = thisBlock.substring(0, chunkSize);						
-					}
-					else{
-						thisLineStr = "";						
-					}					
+					do {
+						Log.i("tv", "maxWidth: " + maxWidth);
+						chunkSize = getChunk(thisBlock, maxWidth);
+						int thisCharOffset = charOffsetEnd+chunkSize;
 
-					lineObjects.clear();
-
-					if(mIsHtml){						
-						spans = ((Spanned) mText).getSpans(charOffsetStart, charOffsetEnd , Object.class);
-						if(spans.length > 0){
-							parseSpans(lineObjects, spans, charOffsetStart, charOffsetEnd, xOffset);													
+						if(chunkSize>1){
+							thisLineStr = thisBlock.substring(0, chunkSize);						
 						}
-					}
+						else{
+							thisLineStr = "";						
+						}					
 
-					//lineObjects.clear();
+						lineObjects.clear();
+
+						if(mIsHtml){						
+							spans = ((Spanned) mText).getSpans(charOffsetStart,  thisCharOffset, Object.class);
+							if(spans.length > 0){
+								actualWidth = parseSpans(lineObjects, spans, charOffsetStart, thisCharOffset, xOffset);							
+							}
+						}
+
+
+						Log.i("tv", "actualWidth: " + actualWidth);
+
+						if(actualWidth>maxWidth) maxWidth-=5; // if we end up looping - start slicing chars off till we get a suitable size 
+
+					} while (actualWidth > maxWidth);	
+
+
+
+					// chunk is ok 
+					charOffsetEnd += chunkSize;
+
+					Log.i("tv", "charOffsetEnd: " + charOffsetEnd);
 
 					if(lineObjects.size() <= 0 ){ // no funky objects found, add the whole chunk as one object
 						htmlLine = new HtmlObject(thisLineStr, 0, 0, xOffset, mTextPaint);						
@@ -343,15 +379,15 @@ public class FlowTextView extends RelativeLayout {
 					}
 
 					for (HtmlObject thisHtmlObject : lineObjects) {
-						
+
 						if(thisHtmlObject instanceof HtmlLink){
 							HtmlLink thisLink = (HtmlLink) thisHtmlObject;
 							float thisLinkWidth = thisLink.paint.measureText(thisHtmlObject.content);							
 							addLink(thisLink, yOffset, thisLinkWidth, lineHeight);
 						}
-						
+
 						paintObject(canvas, thisHtmlObject.content, thisHtmlObject.xOffset, yOffset, thisHtmlObject.paint);	
-						
+
 						if(thisHtmlObject.recycle){
 							recyclePaint(thisHtmlObject.paint);
 						}
@@ -363,7 +399,9 @@ public class FlowTextView extends RelativeLayout {
 					charOffsetStart = charOffsetEnd;
 				}
 			}
-		}				
+		}	
+
+		yOffset+= (lineHeight/2);
 		mDesiredHeight = Math.max(lowestYCoord, (int) yOffset);			
 
 		if(needsMeasure){
@@ -399,8 +437,8 @@ public class FlowTextView extends RelativeLayout {
 	}
 
 	private class Line{
-		public int leftBound;
-		public int rightBound;
+		public float leftBound;
+		public float rightBound;
 	}
 
 	private ArrayList<Box> boxes = new ArrayList<FlowTextView.Box>();	
@@ -497,7 +535,7 @@ public class FlowTextView extends RelativeLayout {
 	float objPixelwidth;	
 
 	HashMap<Integer, HtmlObject> sorterMap = new HashMap<Integer, FlowTextView.HtmlObject>();
-	private void parseSpans(ArrayList<HtmlObject> objects, Object[] spans, int lineStart, int lineEnd, float baseXOffset){
+	private float parseSpans(ArrayList<HtmlObject> objects, Object[] spans, int lineStart, int lineEnd, float baseXOffset){
 
 		sorterMap.clear();
 
@@ -561,15 +599,19 @@ public class FlowTextView extends RelativeLayout {
 		sorterKeys = sorterMap.keySet().toArray();
 		Arrays.sort(sorterKeys);
 
+		float thisXoffset = baseXOffset;
+
 		for(charCounter=0; charCounter < sorterKeys.length; charCounter++){
 			HtmlObject thisObj = sorterMap.get(sorterKeys[charCounter]);			
-			thisObj.xOffset = baseXOffset;
+			thisObj.xOffset = thisXoffset;
 			tempFloat = thisObj.paint.measureText(thisObj.content);
-			baseXOffset+=tempFloat;			
+			thisXoffset+=tempFloat;			
 			objects.add(thisObj);
-		}		
+		}	
+
+		return (thisXoffset - baseXOffset);
 	}
-	
+
 	float tempFloat;
 	Object[] sorterKeys;
 	int[] sortedKeys;
@@ -621,7 +663,7 @@ public class FlowTextView extends RelativeLayout {
 		TextPaint paint = getPaintFromHeap();
 		paint.setTypeface(Typeface.defaultFromStyle(span.getStyle()));
 		paint.setTextSize(mTextsize);
-		paint.setColor(Color.BLACK);
+		paint.setColor(mColor);
 
 		span.updateDrawState(paint);
 		span.updateMeasureState(paint);
@@ -636,19 +678,19 @@ public class FlowTextView extends RelativeLayout {
 	}
 
 	private ArrayList<HtmlLink> mLinks = new ArrayList<FlowTextView.HtmlLink>();
-	
+
 	private HtmlLink getHtmlLink(URLSpan span, String content, int start, int end, float thisXOffset){
 		HtmlLink  obj = new HtmlLink(content, start, end, thisXOffset, mLinkPaint, span.getURL());
 		mLinks.add(obj);
 		return obj;		
 	}
-	
+
 	private void addLink(HtmlLink thisLink, float yOffset, float width, float height){
 		thisLink.yOffset = yOffset - 20;;
 		thisLink.width = width;
 		thisLink.height = height + 20;		
 		mLinks.add(thisLink);
-		
+
 	}
 
 	private Spannable mSpannable;
@@ -656,23 +698,18 @@ public class FlowTextView extends RelativeLayout {
 
 	int mTextLength = 0;
 	public void setText(CharSequence text){
-
 		mText = text;		
-
-
 		if(text instanceof Spannable){
 			mIsHtml = true;
 			mSpannable = (Spannable) text;
 			Object[] urls = mSpannable.getSpans(0, mSpannable.length(), Object.class);
-
-			//int urlStart = spannable.getSpanStart(urls[0]);
-			//count = urlStart;
-			//urlStart = spannable.getSpanStart(urls[1]);
 		}else{
 			mIsHtml = false;
 		}	
 
 		mTextLength = mText.length();
+
+		this.invalidate();
 	}
 
 
