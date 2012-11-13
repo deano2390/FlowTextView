@@ -131,6 +131,14 @@ public class FlowTextView extends RelativeLayout {
 		invalidate();
 	}
 
+	private Typeface typeFace;
+	public void setTypeface(Typeface type){
+		this.typeFace = type;
+		mTextPaint.setTypeface(typeFace);
+		mLinkPaint.setTypeface(typeFace);		
+		invalidate();
+	}
+	
 	private int mDesiredHeight = 100; // height of the whole view
 
 	private float mSpacingMult = 1.0f;
