@@ -18,9 +18,12 @@ import android.text.TextPaint;
 import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.RelativeLayout;
 
 public class FlowTextView extends RelativeLayout {
@@ -43,6 +46,8 @@ public class FlowTextView extends RelativeLayout {
 
 
 	private int mColor = Color.BLACK;
+	private int pageHeight = 0;
+
 	public void setColor(int color){
 		this.mColor = color;
 
@@ -69,7 +74,6 @@ public class FlowTextView extends RelativeLayout {
 		mLinkPaint.setTextSize(mTextsize);
 		mLinkPaint.setColor(Color.BLUE);
 		mLinkPaint.setUnderlineText(true);
-
 
 		this.setBackgroundColor(Color.TRANSPARENT);
 
@@ -410,9 +414,31 @@ public class FlowTextView extends RelativeLayout {
 			}
 		}	
 
-		yOffset+= (lineHeight/2);
-		mDesiredHeight = Math.max(lowestYCoord, (int) yOffset);			
+		yOffset += (lineHeight/2);
 
+		View child = getChildAt(getChildCount()-1);
+		if (child.getTag().toString().equalsIgnoreCase("hideable"))
+		{
+			if (yOffset > pageHeight)
+			{
+				if (yOffset < boxes.get(boxes.size()-1).topLefty - getLineHeight())
+				{
+					child.setVisibility(View.GONE);
+					lowestYCoord = (int) yOffset;
+				}
+				else
+				{
+					lowestYCoord = boxes.get(boxes.size()-1).bottomRighty + getLineHeight();
+					child.setVisibility(View.VISIBLE);
+				}	
+			}
+			else
+			{
+				child.setVisibility(View.GONE);
+				lowestYCoord = (int) yOffset;
+			}
+		}
+		mDesiredHeight = Math.max(lowestYCoord, (int) yOffset);			
 		if(needsMeasure){
 			needsMeasure = false;
 			requestLayout();
@@ -421,7 +447,8 @@ public class FlowTextView extends RelativeLayout {
 
 
 	@Override
-	protected void onConfigurationChanged(Configuration newConfig) {		
+	protected void onConfigurationChanged(Configuration newConfig) 
+	{		
 		super.onConfigurationChanged(newConfig);
 		this.invalidate();
 	}
@@ -750,6 +777,11 @@ public class FlowTextView extends RelativeLayout {
 		public int xOffset;
 		public int yOffset;
 		public int mPadding = 10;
+	}
+	
+	public void setPageHeight(int pageHeight)
+	{
+		this.pageHeight = pageHeight;
 	}
 
 
