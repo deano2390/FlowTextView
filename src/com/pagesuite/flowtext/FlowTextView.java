@@ -136,7 +136,7 @@ public class FlowTextView extends RelativeLayout {
 		mLinkPaint.setTypeface(typeFace);		
 		invalidate();
 	}
-	
+
 	private int mDesiredHeight = 100; // height of the whole view
 
 	private float mSpacingMult = 1.0f;
@@ -297,13 +297,16 @@ public class FlowTextView extends RelativeLayout {
 		int childCount = this.getChildCount();
 		for (int i = 0; i < childCount; i++) {
 			View child = getChildAt(i);
-			Box box = new Box();
-			box.topLeftx = (int) child.getLeft();
-			box.topLefty = (int) child.getTop();
-			box.bottomRightx = box.topLeftx + child.getWidth();
-			box.bottomRighty = box.topLefty + child.getHeight();
-			boxes.add(box);			
-			if(box.bottomRighty > lowestYCoord) lowestYCoord = box.bottomRighty;
+			if (child.getVisibility() != View.GONE)
+			{
+				Box box = new Box();
+				box.topLeftx = (int) child.getLeft();
+				box.topLefty = (int) child.getTop();
+				box.bottomRightx = box.topLeftx + child.getWidth();
+				box.bottomRighty = box.topLefty + child.getHeight();
+				boxes.add(box);			
+				if(box.bottomRighty > lowestYCoord) lowestYCoord = box.bottomRighty;
+			}
 		}
 
 		String[] blocks = mText.toString().split("\n");
@@ -342,7 +345,7 @@ public class FlowTextView extends RelativeLayout {
 					xOffset = thisLine.leftBound;
 					maxWidth = thisLine.rightBound - thisLine.leftBound;
 					float actualWidth = 0;
-					
+
 
 					do {
 						Log.i("tv", "maxWidth: " + maxWidth);
@@ -481,9 +484,7 @@ public class FlowTextView extends RelativeLayout {
 			height = mDesiredHeight;
 		}
 
-		setMeasuredDimension(width, height);
-
-
+		setMeasuredDimension(width, height + getLineHeight());
 
 		//setMeasuredDimension(800, 1400);
 	}
