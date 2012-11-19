@@ -417,25 +417,28 @@ public class FlowTextView extends RelativeLayout {
 		yOffset += (lineHeight/2);
 
 		View child = getChildAt(getChildCount()-1);
-		if (child.getTag().toString().equalsIgnoreCase("hideable"))
+		if (child.getTag() != null)
 		{
-			if (yOffset > pageHeight)
+			if (child.getTag().toString().equalsIgnoreCase("hideable"))
 			{
-				if (yOffset < boxes.get(boxes.size()-1).topLefty - getLineHeight())
+				if (yOffset > pageHeight)
+				{
+					if (yOffset < boxes.get(boxes.size()-1).topLefty - getLineHeight())
+					{
+						child.setVisibility(View.GONE);
+						lowestYCoord = (int) yOffset;
+					}
+					else
+					{
+						lowestYCoord = boxes.get(boxes.size()-1).bottomRighty + getLineHeight();
+						child.setVisibility(View.VISIBLE);
+					}	
+				}
+				else
 				{
 					child.setVisibility(View.GONE);
 					lowestYCoord = (int) yOffset;
 				}
-				else
-				{
-					lowestYCoord = boxes.get(boxes.size()-1).bottomRighty + getLineHeight();
-					child.setVisibility(View.VISIBLE);
-				}	
-			}
-			else
-			{
-				child.setVisibility(View.GONE);
-				lowestYCoord = (int) yOffset;
 			}
 		}
 		mDesiredHeight = Math.max(lowestYCoord, (int) yOffset);			
@@ -778,7 +781,7 @@ public class FlowTextView extends RelativeLayout {
 		public int yOffset;
 		public int mPadding = 10;
 	}
-	
+
 	public void setPageHeight(int pageHeight)
 	{
 		this.pageHeight = pageHeight;
