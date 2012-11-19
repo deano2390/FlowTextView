@@ -42,8 +42,6 @@ public class FlowTextView extends RelativeLayout {
 	}	
 
 
-
-
 	private int mColor = Color.BLACK;
 	public void setColor(int color){
 		this.mColor = color;
