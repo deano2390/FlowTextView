@@ -292,6 +292,8 @@ public class FlowTextView extends RelativeLayout {
 	@Override
 	protected void onDraw(Canvas canvas) {		
 
+		Log.i("flowText", "onDraw");
+		
 		super.onDraw(canvas);		
 
 		mViewWidth = this.getWidth();
@@ -369,13 +371,19 @@ public class FlowTextView extends RelativeLayout {
 							spans = ((Spanned) mText).getSpans(charOffsetStart,  thisCharOffset, Object.class);
 							if(spans.length > 0){
 								actualWidth = parseSpans(lineObjects, spans, charOffsetStart, thisCharOffset, xOffset);							
+							}else{
+								actualWidth = maxWidth; // if no spans then the actual width will be <= maxwidth anyway	
 							}
+						}else{
+							actualWidth = maxWidth;// if not html then the actual width will be <= maxwidth anyway	
 						}
 
 
 						Log.i("tv", "actualWidth: " + actualWidth);
 
-						if(actualWidth>maxWidth) maxWidth-=5; // if we end up looping - start slicing chars off till we get a suitable size 
+						if(actualWidth>maxWidth){
+							maxWidth-=5; // if we end up looping - start slicing chars off till we get a suitable size 
+						}
 
 					} while (actualWidth > maxWidth);	
 
@@ -490,6 +498,7 @@ public class FlowTextView extends RelativeLayout {
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {	
 
+		Log.i("flowText", "onMeasure");
 		super.onMeasure(widthMeasureSpec, heightMeasureSpec);	
 
 		int widthMode = MeasureSpec.getMode(widthMeasureSpec);
