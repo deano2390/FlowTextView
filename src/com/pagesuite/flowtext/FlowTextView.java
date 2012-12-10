@@ -24,6 +24,7 @@ import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
 public class FlowTextView extends RelativeLayout {
@@ -51,6 +52,8 @@ public class FlowTextView extends RelativeLayout {
 	public void setColor(int color){
 		this.mColor = color;
 
+
+		
 		if(mTextPaint!=null){
 			mTextPaint.setColor(mColor);
 		}
@@ -434,21 +437,23 @@ public class FlowTextView extends RelativeLayout {
 					if (yOffset < boxes.get(boxes.size()-1).topLefty - getLineHeight())
 					{
 						child.setVisibility(View.GONE);
-						lowestYCoord = (int) yOffset;
+						//lowestYCoord = (int) yOffset;
 					}
 					else
 					{
-						lowestYCoord = boxes.get(boxes.size()-1).bottomRighty + getLineHeight();
+						//lowestYCoord = boxes.get(boxes.size()-1).bottomRighty + getLineHeight();
 						child.setVisibility(View.VISIBLE);
 					}	
 				}
 				else
 				{
 					child.setVisibility(View.GONE);
-					lowestYCoord = (int) yOffset;
+					//lowestYCoord = (int) yOffset;
 				}
 			}
 		}
+		
+		
 		mDesiredHeight = Math.max(lowestYCoord, (int) yOffset);			
 		if(needsMeasure){
 			needsMeasure = false;
