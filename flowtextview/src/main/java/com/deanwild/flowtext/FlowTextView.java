@@ -19,12 +19,40 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
 
+import com.deanwild.flowtext.listeners.OnLinkClickListener;
+import com.deanwild.flowtext.models.Area;
+import com.deanwild.flowtext.models.BitmapSpec;
+import com.deanwild.flowtext.models.Box;
+import com.deanwild.flowtext.models.HtmlLink;
+import com.deanwild.flowtext.models.HtmlObject;
+import com.deanwild.flowtext.models.Line;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
 public class FlowTextView extends RelativeLayout {
 
+    // fields
+    private int mColor = Color.BLACK;
+    private int pageHeight = 0;
+    private TextPaint mTextPaint;
+    private TextPaint mLinkPaint;
+    private float mTextsize = 20.0f;
+    private Typeface typeFace;
+    private int mDesiredHeight = 100; // height of the whole view
+    private float mSpacingMult = 1.0f;
+    private float mSpacingAdd = 0.0f;
+    private float mViewWidth;
+    private ArrayList<Box> mLineboxes = new ArrayList<Box>();
+    private ArrayList<Area> mAreas = new ArrayList<Area>();
+    private OnLinkClickListener mOnLinkClickListener;
+    private Area mLargestArea;
+    private boolean needsMeasure = true;
+    private ArrayList<Box> boxes = new ArrayList<Box>();
+    private CharSequence mText = "";
+    private boolean mIsHtml = false;
+    private static final BoringLayout.Metrics UNKNOWN_BORING = new BoringLayout.Metrics();
 
 	public FlowTextView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
@@ -39,26 +67,6 @@ public class FlowTextView extends RelativeLayout {
 	public FlowTextView(Context context) {
 		super(context);
 		init(context);
-	}	
-
-
-	private int mColor = Color.BLACK;
-	private int pageHeight = 0;
-
-	public void setColor(int color){
-		this.mColor = color;
-
-
-		
-		if(mTextPaint!=null){
-			mTextPaint.setColor(mColor);
-		}
-
-		for (TextPaint paint : mPaintHeap) {
-			paint.setColor(mColor);
-		}
-
-		this.invalidate();
 	}
 
 	private void init(Context context){		
@@ -113,22 +121,35 @@ public class FlowTextView extends RelativeLayout {
 			}
 		});
 
-	}	
+	}
 
+    // getters and setters
+
+    public void setColor(int color){
+        this.mColor = color;
+
+        if(mTextPaint!=null){
+            mTextPaint.setColor(mColor);
+        }
+
+        for (TextPaint paint : mPaintHeap) {
+            paint.setColor(mColor);
+        }
+
+        this.invalidate();
+    }
+
+
+    // static helpers methods
 	private static double getPointDistance(float x1, float y1, float x2, float y2){
 		double dist = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1- y2, 2));
 		return dist;
-
 	}
-
-	private TextPaint mTextPaint;
-	private TextPaint mLinkPaint;
 
     public float getTextsize() {
         return mTextsize;
     }
 
-    private float mTextsize = 20.0f;
 	public void setTextSize(float textSize){
 		this.mTextsize = textSize;
 		mTextPaint.setTextSize(mTextsize);
@@ -136,7 +157,6 @@ public class FlowTextView extends RelativeLayout {
 		invalidate();
 	}
 
-	private Typeface typeFace;
 	public void setTypeface(Typeface type){
 		this.typeFace = type;
 		mTextPaint.setTypeface(typeFace);
@@ -144,24 +164,7 @@ public class FlowTextView extends RelativeLayout {
 		invalidate();
 	}
 
-	private int mDesiredHeight = 100; // height of the whole view
-
-	private float mSpacingMult = 1.0f;
-	private float mSpacingAdd = 0.0f;
-
-	private float mViewWidth;
-
-	private class Area{
-		float x1;
-		float x2;
-		float width;
-	}
-
-
-	private ArrayList<Box> mLineboxes = new ArrayList<FlowTextView.Box>();
-	private ArrayList<Area> mAreas = new ArrayList<FlowTextView.Area>();
-
-	private void onClick(float x, float y){		
+    private void onClick(float x, float y){
 
 		for (HtmlLink link : mLinks) {
 			float tlX = link.xOffset;
@@ -180,17 +183,11 @@ public class FlowTextView extends RelativeLayout {
 		}		
 	}	
 
-	private OnLinkClickListener mOnLinkClickListener;
-
 	public void setOnLinkClickListener(OnLinkClickListener onLinkClickListener){
 		this.mOnLinkClickListener = onLinkClickListener;
 	}
 
-	public interface OnLinkClickListener{
-		public void onLinkClick(String url);
-	}
-
-	private void onLinkClick(String url){
+    private void onLinkClick(String url){
 		if(mOnLinkClickListener!=null) mOnLinkClickListener.onLinkClick(url);
 	}
 
@@ -267,8 +264,6 @@ public class FlowTextView extends RelativeLayout {
 		return line;
 	}
 
-	Area mLargestArea;
-
 	private int getChunk(String text, float maxWidth){		
 		int length = mTextPaint.breakText(text, true, maxWidth, null);
 		if(length<=0) return length; // if its 0 or less, return it, can't fit any chars on this line
@@ -330,7 +325,7 @@ public class FlowTextView extends RelativeLayout {
 		int chunkSize;
 		int lineHeight = getLineHeight();	
 
-		ArrayList<HtmlObject> lineObjects = new ArrayList<FlowTextView.HtmlObject>();
+		ArrayList<HtmlObject> lineObjects = new ArrayList<HtmlObject>();
 		Object[] spans = new Object[0];
 
 		HtmlObject htmlLine;// = new HtmlObject(); // reuse for single plain lines
@@ -461,7 +456,6 @@ public class FlowTextView extends RelativeLayout {
 		}			
 	}
 
-
 	@Override
 	protected void onConfigurationChanged(Configuration newConfig) 
 	{		
@@ -475,32 +469,11 @@ public class FlowTextView extends RelativeLayout {
 		super.invalidate();
 	}
 
-	boolean needsMeasure = true;
-
 	private void paintObject(Canvas canvas, String thisLineStr, float xOffset, float yOffset, Paint paint){
 		canvas.drawText(thisLineStr, xOffset, yOffset, paint);
 	}
 
-	private class Box{
-		public int topLeftx;
-		public int topLefty;
-		public int bottomRightx;
-		public int bottomRighty;
-	}
-
-	private class Line{
-		public float leftBound;
-		public float rightBound;
-	}
-
-	private ArrayList<Box> boxes = new ArrayList<FlowTextView.Box>();	
-
-	private static final BoringLayout.Metrics UNKNOWN_BORING = new BoringLayout.Metrics();
-
-
-
-
-	@Override
+    @Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {	
 
 		Log.i("flowText", "onMeasure");
@@ -540,44 +513,8 @@ public class FlowTextView extends RelativeLayout {
 				+ mSpacingAdd);
 	}
 
-	private CharSequence mText = "";
 
-	private boolean mIsHtml = false;
-	//private URLSpan[] urls;
-
-	class HtmlObject{
-
-		public HtmlObject(String content, int start, int end, float xOffset,
-				TextPaint paint) {
-			super();
-			this.content = content;
-			this.start = start;
-			this.end = end;
-			this.xOffset = xOffset;
-			this.paint = paint;
-		}
-		public String content;
-		public int start;
-		public int end;
-		public float xOffset;
-		public TextPaint paint;
-		public boolean recycle = false;
-	}
-
-	class HtmlLink extends HtmlObject{
-		public HtmlLink(String content, int start, int end, float xOffset,
-				TextPaint paint, String url) {
-			super(content, start, end, xOffset, paint);
-			this.url = url;
-		}
-		public float width;
-		public float height;
-		public float yOffset;
-		public String url;
-	}
-
-
-	private boolean[] charFlags;
+    private boolean[] charFlags;
 	int charFlagSize = 0;
 	int charFlagIndex = 0;
 	int spanStart = 0;
@@ -585,7 +522,7 @@ public class FlowTextView extends RelativeLayout {
 	int charCounter;
 	float objPixelwidth;	
 
-	HashMap<Integer, HtmlObject> sorterMap = new HashMap<Integer, FlowTextView.HtmlObject>();
+	HashMap<Integer, HtmlObject> sorterMap = new HashMap<Integer, HtmlObject>();
 	private float parseSpans(ArrayList<HtmlObject> objects, Object[] spans, int lineStart, int lineEnd, float baseXOffset){
 
 		sorterMap.clear();
@@ -728,7 +665,7 @@ public class FlowTextView extends RelativeLayout {
 		return obj;		
 	}
 
-	private ArrayList<HtmlLink> mLinks = new ArrayList<FlowTextView.HtmlLink>();
+	private ArrayList<HtmlLink> mLinks = new ArrayList<HtmlLink>();
 
 	private HtmlLink getHtmlLink(URLSpan span, String content, int start, int end, float thisXOffset){
 		HtmlLink  obj = new HtmlLink(content, start, end, thisXOffset, mLinkPaint, span.getURL());
@@ -764,7 +701,7 @@ public class FlowTextView extends RelativeLayout {
 	}
 
 
-	private ArrayList<BitmapSpec> bitmaps = new ArrayList<FlowTextView.BitmapSpec>();
+	private ArrayList<BitmapSpec> bitmaps = new ArrayList<BitmapSpec>();
 
 	public BitmapSpec addImage(Bitmap bitmap, int xOffset, int yOffset, int padding){
 		BitmapSpec spec = new BitmapSpec(bitmap, xOffset, yOffset, padding);
@@ -780,23 +717,7 @@ public class FlowTextView extends RelativeLayout {
 		this.bitmaps = bitmaps;
 	}
 
-	public class BitmapSpec{		
-
-		public BitmapSpec(Bitmap bitmap, int xOffset, int yOffset,
-				int mPadding) {
-			super();
-			this.bitmap = bitmap;
-			this.xOffset = xOffset;
-			this.yOffset = yOffset;
-			this.mPadding = mPadding;
-		}
-		public Bitmap bitmap;
-		public int xOffset;
-		public int yOffset;
-		public int mPadding = 10;
-	}
-
-	public void setPageHeight(int pageHeight)
+    public void setPageHeight(int pageHeight)
 	{
 		this.pageHeight = pageHeight;
 	}
