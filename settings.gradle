@@ -1,1 +1,1 @@
-include ':library'
+include ':flowtextview', ':flowtextview-sample'
