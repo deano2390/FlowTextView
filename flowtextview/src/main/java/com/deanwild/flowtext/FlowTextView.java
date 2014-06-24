@@ -124,8 +124,12 @@ public class FlowTextView extends RelativeLayout {
 	private TextPaint mTextPaint;
 	private TextPaint mLinkPaint;
 
-	private int mTextsize = 20;
-	public void setTextSize(int textSize){
+    public float getTextsize() {
+        return mTextsize;
+    }
+
+    private float mTextsize = 20.0f;
+	public void setTextSize(float textSize){
 		this.mTextsize = textSize;
 		mTextPaint.setTextSize(mTextsize);
 		mLinkPaint.setTextSize(mTextsize);		
