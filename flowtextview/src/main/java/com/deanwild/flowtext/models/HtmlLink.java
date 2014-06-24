@@ -2,8 +2,6 @@ package com.deanwild.flowtext.models;
 
 import android.text.TextPaint;
 
-import com.deanwild.flowtext.models.HtmlObject;
-
 /**
 * Created by Dean on 24/06/2014.
 */

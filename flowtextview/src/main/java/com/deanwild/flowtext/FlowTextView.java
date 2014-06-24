@@ -2,7 +2,6 @@ package com.deanwild.flowtext;
 
 import android.content.Context;
 import android.content.res.Configuration;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -11,29 +10,30 @@ import android.text.BoringLayout;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.TextPaint;
-import android.text.style.StyleSpan;
-import android.text.style.URLSpan;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.RelativeLayout;
 
+import com.deanwild.flowtext.helpers.PaintHelper;
+import com.deanwild.flowtext.helpers.SpanParser;
 import com.deanwild.flowtext.listeners.OnLinkClickListener;
 import com.deanwild.flowtext.models.Area;
-import com.deanwild.flowtext.models.BitmapSpec;
 import com.deanwild.flowtext.models.Box;
 import com.deanwild.flowtext.models.HtmlLink;
 import com.deanwild.flowtext.models.HtmlObject;
 import com.deanwild.flowtext.models.Line;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 
 public class FlowTextView extends RelativeLayout {
 
+    private PaintHelper mPaintHelper = new PaintHelper();
+    private SpanParser mSpanParser = new SpanParser(this, mPaintHelper);
+
     // fields
+    int mTextLength = 0;
     private int mColor = Color.BLACK;
     private int pageHeight = 0;
     private TextPaint mTextPaint;
@@ -132,13 +132,10 @@ public class FlowTextView extends RelativeLayout {
             mTextPaint.setColor(mColor);
         }
 
-        for (TextPaint paint : mPaintHeap) {
-            paint.setColor(mColor);
-        }
+        mPaintHelper.setColor(mColor);
 
         this.invalidate();
     }
-
 
     // static helpers methods
 	private static double getPointDistance(float x1, float y1, float x2, float y2){
@@ -164,9 +161,19 @@ public class FlowTextView extends RelativeLayout {
 		invalidate();
 	}
 
+    public TextPaint getTextPaint() {
+        return mTextPaint;
+    }
+
+    public TextPaint getLinkPaint() {
+        return mLinkPaint;
+    }
+
     private void onClick(float x, float y){
 
-		for (HtmlLink link : mLinks) {
+        ArrayList<HtmlLink> links = mSpanParser.getLinks();
+
+		for (HtmlLink link : links) {
 			float tlX = link.xOffset;
 			float tlY = link.yOffset;
 			float brX = link.xOffset + link.width;
@@ -179,7 +186,6 @@ public class FlowTextView extends RelativeLayout {
 					return;
 				}
 			}
-
 		}		
 	}	
 
@@ -264,6 +270,25 @@ public class FlowTextView extends RelativeLayout {
 		return line;
 	}
 
+    public void setText(CharSequence text){
+        mText = text;
+        if(text instanceof Spannable){
+            mIsHtml = true;
+            mSpannable = (Spannable) text;
+            Object[] urls = mSpannable.getSpans(0, mSpannable.length(), Object.class);
+        }else{
+            mIsHtml = false;
+        }
+
+        mTextLength = mText.length();
+
+        this.invalidate();
+    }
+
+    public int getColor() {
+        return mColor;
+    }
+
 	private int getChunk(String text, float maxWidth){		
 		int length = mTextPaint.breakText(text, true, maxWidth, null);
 		if(length<=0) return length; // if its 0 or less, return it, can't fit any chars on this line
@@ -288,10 +313,7 @@ public class FlowTextView extends RelativeLayout {
 	}
 
 	@Override
-	protected void onDraw(Canvas canvas) {		
-
-		Log.i("flowText", "onDraw");
-		
+	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);		
 
 		mViewWidth = this.getWidth();
@@ -330,7 +352,7 @@ public class FlowTextView extends RelativeLayout {
 
 		HtmlObject htmlLine;// = new HtmlObject(); // reuse for single plain lines
 
-		mLinks.clear();
+        mSpanParser.reset();
 
 		for(int block_no = 0; block_no <= blocks.length-1; block_no++)
 		{		
@@ -368,7 +390,7 @@ public class FlowTextView extends RelativeLayout {
 						if(mIsHtml){						
 							spans = ((Spanned) mText).getSpans(charOffsetStart,  thisCharOffset, Object.class);
 							if(spans.length > 0){
-								actualWidth = parseSpans(lineObjects, spans, charOffsetStart, thisCharOffset, xOffset);							
+								actualWidth = mSpanParser.parseSpans(lineObjects, spans, charOffsetStart, thisCharOffset, xOffset);
 							}else{
 								actualWidth = maxWidth; // if no spans then the actual width will be <= maxwidth anyway	
 							}
@@ -376,21 +398,15 @@ public class FlowTextView extends RelativeLayout {
 							actualWidth = maxWidth;// if not html then the actual width will be <= maxwidth anyway	
 						}
 
-
-						Log.i("tv", "actualWidth: " + actualWidth);
-
 						if(actualWidth>maxWidth){
 							maxWidth-=5; // if we end up looping - start slicing chars off till we get a suitable size 
 						}
 
-					} while (actualWidth > maxWidth);	
-
-
+					} while (actualWidth > maxWidth);
 
 					// chunk is ok 
 					charOffsetEnd += chunkSize;
 
-					Log.i("tv", "charOffsetEnd: " + charOffsetEnd);
 
 					if(lineObjects.size() <= 0 ){ // no funky objects found, add the whole chunk as one object
 						htmlLine = new HtmlObject(thisLineStr, 0, 0, xOffset, mTextPaint);						
@@ -402,13 +418,13 @@ public class FlowTextView extends RelativeLayout {
 						if(thisHtmlObject instanceof HtmlLink){
 							HtmlLink thisLink = (HtmlLink) thisHtmlObject;
 							float thisLinkWidth = thisLink.paint.measureText(thisHtmlObject.content);							
-							addLink(thisLink, yOffset, thisLinkWidth, lineHeight);
+							mSpanParser.addLink(thisLink, yOffset, thisLinkWidth, lineHeight);
 						}
 
 						paintObject(canvas, thisHtmlObject.content, thisHtmlObject.xOffset, yOffset, thisHtmlObject.paint);	
 
 						if(thisHtmlObject.recycle){
-							recyclePaint(thisHtmlObject.paint);
+                            mPaintHelper.recyclePaint(thisHtmlObject.paint);
 						}
 					}
 
@@ -432,22 +448,18 @@ public class FlowTextView extends RelativeLayout {
 					if (yOffset < boxes.get(boxes.size()-1).topLefty - getLineHeight())
 					{
 						child.setVisibility(View.GONE);
-						//lowestYCoord = (int) yOffset;
 					}
 					else
 					{
-						//lowestYCoord = boxes.get(boxes.size()-1).bottomRighty + getLineHeight();
 						child.setVisibility(View.VISIBLE);
 					}	
 				}
 				else
 				{
 					child.setVisibility(View.GONE);
-					//lowestYCoord = (int) yOffset;
 				}
 			}
 		}
-		
 		
 		mDesiredHeight = Math.max(lowestYCoord, (int) yOffset);			
 		if(needsMeasure){
@@ -474,9 +486,7 @@ public class FlowTextView extends RelativeLayout {
 	}
 
     @Override
-	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {	
-
-		Log.i("flowText", "onMeasure");
+	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 		super.onMeasure(widthMeasureSpec, heightMeasureSpec);	
 
 		int widthMode = MeasureSpec.getMode(widthMeasureSpec);
@@ -502,225 +512,17 @@ public class FlowTextView extends RelativeLayout {
 		}
 
 		setMeasuredDimension(width, height + getLineHeight());
-
-		//setMeasuredDimension(800, 1400);
 	}
-
-
 
 	public int getLineHeight() {
 		return Math.round(mTextPaint.getFontMetricsInt(null) * mSpacingMult
 				+ mSpacingAdd);
 	}
 
-
-    private boolean[] charFlags;
-	int charFlagSize = 0;
-	int charFlagIndex = 0;
-	int spanStart = 0;
-	int spanEnd = 0;
-	int charCounter;
-	float objPixelwidth;	
-
-	HashMap<Integer, HtmlObject> sorterMap = new HashMap<Integer, HtmlObject>();
-	private float parseSpans(ArrayList<HtmlObject> objects, Object[] spans, int lineStart, int lineEnd, float baseXOffset){
-
-		sorterMap.clear();
-
-		charFlagSize = lineEnd - lineStart;
-		charFlags = new boolean[charFlagSize];
-
-		for (Object span : spans) {
-			spanStart = mSpannable.getSpanStart(span);
-			spanEnd = mSpannable.getSpanEnd(span);
-
-			if(spanStart<lineStart) spanStart = lineStart;
-			if(spanEnd>lineEnd) spanEnd = lineEnd;
-
-			for(charCounter = spanStart; charCounter<spanEnd; charCounter++){ // mark these characters as rendered
-				charFlagIndex = charCounter - lineStart;
-				charFlags[charFlagIndex] = true;
-			}
-
-			tempString = extractText(spanStart, spanEnd);
-			sorterMap.put(spanStart, parseSpan(span, tempString, spanStart, spanEnd));
-			//objects.add();			
-		}
-
-		charCounter = 0;
-
-		while(!isArrayFull(charFlags)){
-			while(true){
-
-				if(charCounter>=charFlagSize) break;
-
-
-				if(charFlags[charCounter]==true){					
-					charCounter++;
-					continue;
-				}	
-
-				temp1 = charCounter;
-				while(true){
-					if(charCounter>charFlagSize) break;
-
-					if(charCounter<charFlagSize){
-						if(charFlags[charCounter] == false){	
-
-							charFlags[charCounter] = true;// mark as filled
-							charCounter++;
-							continue;
-
-						}
-					}
-					temp2 = charCounter;	
-					spanStart = lineStart + temp1;
-					spanEnd = lineStart + temp2;
-					tempString = extractText(spanStart, spanEnd);
-					sorterMap.put(spanStart, parseSpan(null, tempString, spanStart, spanEnd));						
-					break;
-
-				}
-			}
-		}
-
-		sorterKeys = sorterMap.keySet().toArray();
-		Arrays.sort(sorterKeys);
-
-		float thisXoffset = baseXOffset;
-
-		for(charCounter=0; charCounter < sorterKeys.length; charCounter++){
-			HtmlObject thisObj = sorterMap.get(sorterKeys[charCounter]);			
-			thisObj.xOffset = thisXoffset;
-			tempFloat = thisObj.paint.measureText(thisObj.content);
-			thisXoffset+=tempFloat;			
-			objects.add(thisObj);
-		}	
-
-		return (thisXoffset - baseXOffset);
-	}
-
-	float tempFloat;
-	Object[] sorterKeys;
-	int[] sortedKeys;
-	String tempString;
-	int temp1;
-	int temp2;
-
-	int arrayIndex = 0;
-	private boolean isArrayFull(boolean[] array){
-		for(arrayIndex=0; arrayIndex<array.length; arrayIndex++){
-			if(array[arrayIndex] == false) return false;
-		}
-		return true;
-	}
-
-	private HtmlObject parseSpan(Object span, String content, int start, int end){		
-
-		if(span instanceof URLSpan){
-			return getHtmlLink((URLSpan) span, content, start, end, 0);
-		}else if(span instanceof StyleSpan){
-			return getStyledObject((StyleSpan) span, content, start, end, 0);
-		}else{
-			return getHtmlObject(content, start, end, 0);
-		}			
-	}
-
-	private String extractText(int start, int end){
-		if(start<0) start = 0;
-		if(end > mTextLength-1) end = mTextLength-1;
-		return mSpannable.subSequence(start, end).toString();
-	}
-
-
-	private ArrayList<TextPaint> mPaintHeap = new ArrayList<TextPaint>();
-
-	private TextPaint getPaintFromHeap(){
-		if(mPaintHeap.size()>0){
-			return mPaintHeap.remove(0);			
-		}else{
-			return new TextPaint(Paint.ANTI_ALIAS_FLAG);
-		}		
-	}
-
-	private void recyclePaint(TextPaint paint){
-		mPaintHeap.add(paint);
-	}	
-
-	private HtmlObject getStyledObject(StyleSpan span, String content, int start, int end, float thisXOffset){
-		TextPaint paint = getPaintFromHeap();
-		paint.setTypeface(Typeface.defaultFromStyle(span.getStyle()));
-		paint.setTextSize(mTextsize);
-		paint.setColor(mColor);
-
-		span.updateDrawState(paint);
-		span.updateMeasureState(paint);
-		HtmlObject  obj = new HtmlObject(content, start, end, thisXOffset, paint);
-		obj.recycle = true;
-		return obj;		
-	}
-
-	private HtmlObject getHtmlObject(String content, int start, int end, float thisXOffset){
-		HtmlObject  obj = new HtmlObject(content, start, end, thisXOffset, mTextPaint);
-		return obj;		
-	}
-
-	private ArrayList<HtmlLink> mLinks = new ArrayList<HtmlLink>();
-
-	private HtmlLink getHtmlLink(URLSpan span, String content, int start, int end, float thisXOffset){
-		HtmlLink  obj = new HtmlLink(content, start, end, thisXOffset, mLinkPaint, span.getURL());
-		mLinks.add(obj);
-		return obj;		
-	}
-
-	private void addLink(HtmlLink thisLink, float yOffset, float width, float height){
-		thisLink.yOffset = yOffset - 20;;
-		thisLink.width = width;
-		thisLink.height = height + 20;		
-		mLinks.add(thisLink);
-
-	}
-
 	private Spannable mSpannable;
-
-
-	int mTextLength = 0;
-	public void setText(CharSequence text){
-		mText = text;		
-		if(text instanceof Spannable){
-			mIsHtml = true;
-			mSpannable = (Spannable) text;
-			Object[] urls = mSpannable.getSpans(0, mSpannable.length(), Object.class);
-		}else{
-			mIsHtml = false;
-		}	
-
-		mTextLength = mText.length();
-
-		this.invalidate();
-	}
-
-
-	private ArrayList<BitmapSpec> bitmaps = new ArrayList<BitmapSpec>();
-
-	public BitmapSpec addImage(Bitmap bitmap, int xOffset, int yOffset, int padding){
-		BitmapSpec spec = new BitmapSpec(bitmap, xOffset, yOffset, padding);
-		bitmaps.add(spec);
-		return spec;
-	}
-
-	public ArrayList<BitmapSpec> getBitmaps() {
-		return bitmaps;
-	}
-
-	public void setBitmaps(ArrayList<BitmapSpec> bitmaps) {
-		this.bitmaps = bitmaps;
-	}
 
     public void setPageHeight(int pageHeight)
 	{
 		this.pageHeight = pageHeight;
 	}
-
-
 }
