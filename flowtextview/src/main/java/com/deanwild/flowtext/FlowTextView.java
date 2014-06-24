@@ -1,8 +1,4 @@
-package com.pagesuite.flowtext;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+package com.deanwild.flowtext;
 
 import android.content.Context;
 import android.content.res.Configuration;
@@ -18,14 +14,14 @@ import android.text.TextPaint;
 import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.WindowManager;
-import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 
 public class FlowTextView extends RelativeLayout {
 
