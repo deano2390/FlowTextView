@@ -28,9 +28,9 @@ import java.util.ArrayList;
 public class FlowTextView extends RelativeLayout {
 
     // FIELDS
-    private PaintHelper mPaintHelper = new PaintHelper();
-    private SpanParser mSpanParser = new SpanParser(this, mPaintHelper);
-    private ClickHandler mClickHandler = new ClickHandler(mSpanParser);
+    private final PaintHelper mPaintHelper = new PaintHelper();
+    private final SpanParser mSpanParser = new SpanParser(this, mPaintHelper);
+    private final ClickHandler mClickHandler = new ClickHandler(mSpanParser);
     private int mColor = Color.BLACK;
     private int pageHeight = 0;
     private TextPaint mTextPaint;
@@ -38,9 +38,8 @@ public class FlowTextView extends RelativeLayout {
     private float mTextsize = 20.0f;
     private Typeface typeFace;
     private int mDesiredHeight = 100; // height of the whole view
-    private float mViewWidth;
     private boolean needsMeasure = true;
-    private ArrayList<Obstacle> obstacles = new ArrayList<Obstacle>();
+    private final ArrayList<Obstacle> obstacles = new ArrayList<Obstacle>();
     private CharSequence mText = "";
     private boolean mIsHtml = false;
 
@@ -77,7 +76,7 @@ public class FlowTextView extends RelativeLayout {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        mViewWidth = this.getWidth();
+        float mViewWidth = this.getWidth();
         obstacles.clear(); // clear old data, boxes stores an array of "obstacles" that we need to paint the text around
         int lowestYCoord = findBoxesAndReturnLowestObstacleYCoord(); // find the "obstacles" within the view and get the lowest obstacle coordinate at the same time
         String[] blocks = mText.toString().split("\n"); // split the text into its natural blocks
@@ -87,15 +86,15 @@ public class FlowTextView extends RelativeLayout {
         int charOffsetStart = 0; // tells us where we are in the original string
         int charOffsetEnd = 0; // tells us where we are in the original string
         int lineIndex = 0;
-        float xOffset = 0; // left margin off a given line
-        float maxWidth = mViewWidth; // how far to the right it can strectch
+        float xOffset; // left margin off a given line
+        float maxWidth; // how far to the right it can strectch
         float yOffset = 0;
         String thisLineStr; // the current line we are trying to render
         int chunkSize;
         int lineHeight = getLineHeight(); // get the height in pixels of a line for our current TextPaint
 
         ArrayList<HtmlObject> lineObjects = new ArrayList<HtmlObject>(); // this will get populated with special html objects we need to render
-        Object[] spans = new Object[0];
+        Object[] spans;
 
         HtmlObject htmlLine;// reuse for single plain lines
 
@@ -116,7 +115,7 @@ public class FlowTextView extends RelativeLayout {
                     Line thisLine = CollisionHelper.calculateLineSpaceForGivenYOffset(yOffset, lineHeight, mViewWidth, obstacles); // calculate a theoretical "line" space that we have to paint into based on the "obstacles" that exist at this yOffset and this line height - collision detection essentially
                     xOffset = thisLine.leftBound;
                     maxWidth = thisLine.rightBound - thisLine.leftBound;
-                    float actualWidth = 0;
+                    float actualWidth;
 
 
 
@@ -222,8 +221,8 @@ public class FlowTextView extends RelativeLayout {
             if (child.getVisibility() != View.GONE)
             {
                 Obstacle obstacle = new Obstacle();
-                obstacle.topLeftx = (int) child.getLeft();
-                obstacle.topLefty = (int) child.getTop();
+                obstacle.topLeftx = child.getLeft();
+                obstacle.topLefty = child.getTop();
                 obstacle.bottomRightx = obstacle.topLeftx + child.getWidth();
                 obstacle.bottomRighty = obstacle.topLefty + child.getHeight();
                 obstacles.add(obstacle);
@@ -278,8 +277,8 @@ public class FlowTextView extends RelativeLayout {
 		int widthSize = MeasureSpec.getSize(widthMeasureSpec);
 		int heightSize = MeasureSpec.getSize(heightMeasureSpec);
 
-		int width = 0;
-		int height = 0;
+		int width;
+		int height;
 
 		if (widthMode == MeasureSpec.EXACTLY) {
 			// Parent has told us how big to be. So be it.

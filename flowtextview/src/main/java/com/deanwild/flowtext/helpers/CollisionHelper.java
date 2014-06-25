@@ -14,8 +14,7 @@ public class CollisionHelper {
     // static for performance
     // this method is being smashed multiple times in onDraw sequences
     // we don't want these to be instatianted for every call to calculateLineSpaceForGivenYOffset, we'll just reuse them
-    private static ArrayList<Obstacle> mLineboxes = new ArrayList<Obstacle>();
-    private static ArrayList<Area> mAreas = new ArrayList<Area>();
+    private final static ArrayList<Area> mAreas = new ArrayList<Area>();
 
     public static Line calculateLineSpaceForGivenYOffset(float lineYbottom, int lineHeight, float viewWidth, ArrayList<Obstacle> obstacles){
 
@@ -24,9 +23,7 @@ public class CollisionHelper {
         line.rightBound = viewWidth;
 
         float lineYtop = lineYbottom - lineHeight;
-
         mAreas.clear();
-        mLineboxes.clear();
 
         for (Obstacle obstacle : obstacles) {
 
@@ -74,7 +71,7 @@ public class CollisionHelper {
 
         if(mAreas.size()>0){ // if there is no areas then the whole line is clear, if there is areas, return the largest (it means there is one or more boxes colliding with this line)
             for (Area area : mAreas) {
-                if(mLargestArea ==null){
+                if(mLargestArea == null){
                     mLargestArea = area;
                 }else{
                     if(area.width > mLargestArea.width){

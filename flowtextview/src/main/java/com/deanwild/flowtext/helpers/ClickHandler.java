@@ -13,11 +13,11 @@ import java.util.ArrayList;
  */
 public class ClickHandler implements View.OnTouchListener{
 
-    private SpanParser mSpanParser;
+    private final SpanParser mSpanParser;
     private OnLinkClickListener mOnLinkClickListener;
 
-    double distance = 0;
-    float x1,y1,x2,y2 = 0f;
+    private double distance = 0;
+    private float x1,y1,x2,y2 = 0f;
 
     public ClickHandler(SpanParser spanParser) {
         this.mSpanParser = spanParser;
@@ -25,8 +25,6 @@ public class ClickHandler implements View.OnTouchListener{
 
     @Override
     public boolean onTouch(View view, MotionEvent event) {
-
-
 
         int event_code = event.getAction();
 
