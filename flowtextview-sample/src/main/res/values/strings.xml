@@ -2,7 +2,6 @@
 <resources>
 
     <string name="app_name">FlowTextView Sample App</string>
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="lorem"><![CDATA[<html>Lorem <b>ipsum dolor</b> sit amet, consectetur adipiscing elit. In sed massa diam. Integer leo tortor, sagittis eget blandit et, malesuada id odio. Proin gravida dui imperdiet, tempor augue eu, euismod odio. Vivamus nec euismod neque. Nam sed turpis ac arcu consectetur tristique sed et odio. Vivamus posuere aliquet mi vitae bibendum. Suspendisse potenti. Morbi mattis sed nisl sit amet tristique. Nunc mattis porta sem, nec eleifend metus pellentesque non. Mauris tincidunt justo eu magna bibendum feugiat. Suspendisse semper risus dui, non ullamcorper metus scelerisque eu. Proin suscipit nisi non arcu egestas, in adipiscing neque pharetra. Praesent ullamcorper hendrerit enim. Donec in est eget ligula fringilla dictum. Maecenas sodales sem in lacus imperdiet convallis.
 
