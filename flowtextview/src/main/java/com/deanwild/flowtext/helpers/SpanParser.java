@@ -18,41 +18,37 @@ import java.util.HashMap;
  * Created by Dean on 24/06/2014.
  */
 public class SpanParser {
-    private PaintHelper mPaintHelper;
-    private FlowTextView mFlowTextView;
 
     public SpanParser(FlowTextView flowTextView, PaintHelper paintHelper) {
         this.mFlowTextView = flowTextView;
         this.mPaintHelper = paintHelper;
     }
 
+    private PaintHelper mPaintHelper;
+    private FlowTextView mFlowTextView;
+    private ArrayList<HtmlLink> mLinks = new ArrayList<HtmlLink>();
     int mTextLength = 0;
     private Spannable mSpannable;
-    private static boolean[] charFlags;
     int charFlagSize = 0;
     int charFlagIndex = 0;
     int spanStart = 0;
     int spanEnd = 0;
     int charCounter;
-    float objPixelwidth;
 
+    private float tempFloat;
+    private Object[] sorterKeys;
+    private String tempString;
+    private int temp1;
+    private int temp2;
 
-
-    static float tempFloat;
-    static Object[] sorterKeys;
-    static int[] sortedKeys;
-    static String tempString;
-    static int temp1;
-    static int temp2;
-
-    static HashMap<Integer, HtmlObject> sorterMap = new HashMap<Integer, HtmlObject>();
+    private HashMap<Integer, HtmlObject> sorterMap = new HashMap<Integer, HtmlObject>();
 
     public float parseSpans(ArrayList<HtmlObject> objects, Object[] spans, int lineStart, int lineEnd, float baseXOffset){
 
         sorterMap.clear();
 
         charFlagSize = lineEnd - lineStart;
-        charFlags = new boolean[charFlagSize];
+        boolean[] charFlags = new boolean[charFlagSize];
 
         for (Object span : spans) {
             spanStart = mSpannable.getSpanStart(span);
@@ -149,19 +145,12 @@ public class SpanParser {
     }
 
     private HtmlObject getHtmlObject(String content, int start, int end, float thisXOffset){
-        HtmlObject  obj = new HtmlObject(content, start, end, thisXOffset, mFlowTextView.getTextPaint());
-        return obj;
-    }
-
-    public ArrayList<HtmlLink> getLinks() {
-        return mLinks;
+        return new HtmlObject(content, start, end, thisXOffset, mFlowTextView.getTextPaint());
     }
 
     public void reset(){
         mLinks.clear();
     }
-
-    private ArrayList<HtmlLink> mLinks = new ArrayList<HtmlLink>();
 
     private HtmlLink getHtmlLink(URLSpan span, String content, int start, int end, float thisXOffset){
         HtmlLink  obj = new HtmlLink(content, start, end, thisXOffset, mFlowTextView.getLinkPaint(), span.getURL());
@@ -170,13 +159,11 @@ public class SpanParser {
     }
 
     public void addLink(HtmlLink thisLink, float yOffset, float width, float height){
-        thisLink.yOffset = yOffset - 20;;
+        thisLink.yOffset = yOffset - 20;
         thisLink.width = width;
         thisLink.height = height + 20;
         mLinks.add(thisLink);
     }
-
-
 
     private String extractText(int start, int end){
         if(start<0) start = 0;
@@ -184,11 +171,24 @@ public class SpanParser {
         return mSpannable.subSequence(start, end).toString();
     }
 
-    int arrayIndex = 0;
-    private boolean isArrayFull(boolean[] array){
+    private static boolean isArrayFull(boolean[] array){
+        int arrayIndex = 0;
         for(arrayIndex=0; arrayIndex<array.length; arrayIndex++){
             if(array[arrayIndex] == false) return false;
         }
         return true;
+    }
+
+    // GETTERS AND SETTERS
+    public ArrayList<HtmlLink> getLinks() {
+        return mLinks;
+    }
+
+    public Spannable getSpannable() {
+        return mSpannable;
+    }
+
+    public void setSpannable(Spannable mSpannable) {
+        this.mSpannable = mSpannable;
     }
 }
