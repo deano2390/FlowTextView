@@ -21,7 +21,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         flowTextView = (FlowTextView) findViewById(R.id. ftv);
-
         String content = getString(R.string.lorem);
         Spanned html = Html.fromHtml(content);
         flowTextView.setText(html);
