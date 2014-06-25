@@ -1,12 +1,12 @@
 FlowTextView
 ============
 
-![Logo](http://i.imgur.com/iyntFbz.png)
-
-
-Wrapping TextView for Android
+A wrapping TextView for Android
 
 Original project on Google code https://code.google.com/p/android-flowtextview/
+
+![Logo](http://i.imgur.com/iyntFbz.png)
+
 
 A TextView that extends RelativeLayout. The text will wrap around any child views inside the layout.
 
