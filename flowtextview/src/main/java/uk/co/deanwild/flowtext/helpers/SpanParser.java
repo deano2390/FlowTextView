@@ -1,4 +1,4 @@
-package uk.flowtext.helpers;
+package uk.co.deanwild.flowtext.helpers;
 
 import android.graphics.Typeface;
 import android.text.Spannable;
@@ -6,13 +6,13 @@ import android.text.TextPaint;
 import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
 
-import uk.flowtext.FlowTextView;
-import uk.flowtext.models.HtmlLink;
-import uk.flowtext.models.HtmlObject;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+
+import uk.co.deanwild.flowtext.FlowTextView;
+import uk.co.deanwild.flowtext.models.HtmlLink;
+import uk.co.deanwild.flowtext.models.HtmlObject;
 
 /**
  * Created by Dean on 24/06/2014.

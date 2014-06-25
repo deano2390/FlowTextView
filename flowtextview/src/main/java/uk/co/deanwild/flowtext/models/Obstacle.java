@@ -1,4 +1,4 @@
-package uk.flowtext.models;
+package uk.co.deanwild.flowtext.models;
 
 /**
 * Created by Dean on 24/06/2014.
