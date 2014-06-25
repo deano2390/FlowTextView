@@ -6,7 +6,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
-import android.text.BoringLayout;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.TextPaint;
@@ -44,7 +43,6 @@ public class FlowTextView extends RelativeLayout {
     private ArrayList<Obstacle> obstacles = new ArrayList<Obstacle>();
     private CharSequence mText = "";
     private boolean mIsHtml = false;
-    private static final BoringLayout.Metrics UNKNOWN_BORING = new BoringLayout.Metrics();
 
 	public FlowTextView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
