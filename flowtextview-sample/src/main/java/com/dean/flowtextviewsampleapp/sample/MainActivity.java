@@ -2,6 +2,8 @@ package com.dean.flowtextviewsampleapp.sample;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.text.Html;
+import android.text.Spanned;
 import android.view.View;
 import android.widget.Button;
 
@@ -19,7 +21,10 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         flowTextView = (FlowTextView) findViewById(R.id. ftv);
-        flowTextView.setText(getString(R.string.lorem));
+
+        String content = getString(R.string.lorem);
+        Spanned html = Html.fromHtml(content);
+        flowTextView.setText(html);
 
         Button btnIncreasefontSize = (Button) findViewById(R.id.btn_increase_font_size);
         btnIncreasefontSize.setOnClickListener(this);

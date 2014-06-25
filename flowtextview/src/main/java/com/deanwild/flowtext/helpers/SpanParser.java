@@ -35,8 +35,6 @@ public class SpanParser {
     int spanEnd = 0;
     int charCounter;
 
-    private float tempFloat;
-    private Object[] sorterKeys;
     private String tempString;
     private int temp1;
     private int temp2;
@@ -104,7 +102,7 @@ public class SpanParser {
             }
         }
 
-        sorterKeys = sorterMap.keySet().toArray();
+        Object[] sorterKeys = sorterMap.keySet().toArray();
         Arrays.sort(sorterKeys);
 
         float thisXoffset = baseXOffset;
@@ -112,8 +110,7 @@ public class SpanParser {
         for(charCounter=0; charCounter < sorterKeys.length; charCounter++){
             HtmlObject thisObj = sorterMap.get(sorterKeys[charCounter]);
             thisObj.xOffset = thisXoffset;
-            tempFloat = thisObj.paint.measureText(thisObj.content);
-            thisXoffset+=tempFloat;
+            thisXoffset += thisObj.paint.measureText(thisObj.content);
             objects.add(thisObj);
         }
 
@@ -190,5 +187,6 @@ public class SpanParser {
 
     public void setSpannable(Spannable mSpannable) {
         this.mSpannable = mSpannable;
+        mTextLength = mSpannable.length();
     }
 }

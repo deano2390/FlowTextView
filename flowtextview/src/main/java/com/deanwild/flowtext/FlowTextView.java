@@ -32,7 +32,6 @@ public class FlowTextView extends RelativeLayout {
     private PaintHelper mPaintHelper = new PaintHelper();
     private SpanParser mSpanParser = new SpanParser(this, mPaintHelper);
     private ClickHandler mClickHandler = new ClickHandler(mSpanParser);
-    int mTextLength = 0;
     private int mColor = Color.BLACK;
     private int pageHeight = 0;
     private TextPaint mTextPaint;
@@ -354,9 +353,6 @@ public class FlowTextView extends RelativeLayout {
         }else{
             mIsHtml = false;
         }
-
-        mTextLength = mText.length();
-
         this.invalidate();
     }
 
