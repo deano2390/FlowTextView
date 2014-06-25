@@ -24,45 +24,40 @@ public class SpanParser {
         this.mPaintHelper = paintHelper;
     }
 
-    private PaintHelper mPaintHelper;
-    private FlowTextView mFlowTextView;
-    private ArrayList<HtmlLink> mLinks = new ArrayList<HtmlLink>();
-    int mTextLength = 0;
+    private final PaintHelper mPaintHelper;
+    private final FlowTextView mFlowTextView;
+    private final ArrayList<HtmlLink> mLinks = new ArrayList<HtmlLink>();
+    private int mTextLength = 0;
     private Spannable mSpannable;
-    int charFlagSize = 0;
-    int charFlagIndex = 0;
-    int spanStart = 0;
-    int spanEnd = 0;
-    int charCounter;
 
-    private String tempString;
-    private int temp1;
-    private int temp2;
-
-    private HashMap<Integer, HtmlObject> sorterMap = new HashMap<Integer, HtmlObject>();
+    private final HashMap<Integer, HtmlObject> sorterMap = new HashMap<Integer, HtmlObject>();
 
     public float parseSpans(ArrayList<HtmlObject> objects, Object[] spans, int lineStart, int lineEnd, float baseXOffset){
 
         sorterMap.clear();
-
-        charFlagSize = lineEnd - lineStart;
+        int charFlagSize = lineEnd - lineStart;
         boolean[] charFlags = new boolean[charFlagSize];
 
+        String tempString;
+        int spanStart;
+        int spanEnd;
+        int charCounter;
+
         for (Object span : spans) {
+
             spanStart = mSpannable.getSpanStart(span);
             spanEnd = mSpannable.getSpanEnd(span);
 
-            if(spanStart<lineStart) spanStart = lineStart;
-            if(spanEnd>lineEnd) spanEnd = lineEnd;
+            if(spanStart <lineStart) spanStart = lineStart;
+            if(spanEnd >lineEnd) spanEnd = lineEnd;
 
-            for(charCounter = spanStart; charCounter<spanEnd; charCounter++){ // mark these characters as rendered
-                charFlagIndex = charCounter - lineStart;
+            for(charCounter = spanStart; charCounter < spanEnd; charCounter++){ // mark these characters as rendered
+                int charFlagIndex = charCounter - lineStart;
                 charFlags[charFlagIndex] = true;
             }
 
             tempString = extractText(spanStart, spanEnd);
             sorterMap.put(spanStart, parseSpan(span, tempString, spanStart, spanEnd));
-            //objects.add();
         }
 
         charCounter = 0;
@@ -70,7 +65,7 @@ public class SpanParser {
         while(!isArrayFull(charFlags)){
             while(true){
 
-                if(charCounter>=charFlagSize) break;
+                if(charCounter >= charFlagSize) break;
 
 
                 if(charFlags[charCounter]==true){
@@ -78,20 +73,18 @@ public class SpanParser {
                     continue;
                 }
 
-                temp1 = charCounter;
+                int temp1 = charCounter;
                 while(true){
-                    if(charCounter>charFlagSize) break;
+                    if(charCounter > charFlagSize) break;
 
-                    if(charCounter<charFlagSize){
+                    if(charCounter < charFlagSize){
                         if(charFlags[charCounter] == false){
-
                             charFlags[charCounter] = true;// mark as filled
                             charCounter++;
                             continue;
-
                         }
                     }
-                    temp2 = charCounter;
+                    int temp2 = charCounter;
                     spanStart = lineStart + temp1;
                     spanEnd = lineStart + temp2;
                     tempString = extractText(spanStart, spanEnd);
@@ -107,7 +100,7 @@ public class SpanParser {
 
         float thisXoffset = baseXOffset;
 
-        for(charCounter=0; charCounter < sorterKeys.length; charCounter++){
+        for(charCounter =0; charCounter < sorterKeys.length; charCounter++){
             HtmlObject thisObj = sorterMap.get(sorterKeys[charCounter]);
             thisObj.xOffset = thisXoffset;
             thisXoffset += thisObj.paint.measureText(thisObj.content);
@@ -169,8 +162,7 @@ public class SpanParser {
     }
 
     private static boolean isArrayFull(boolean[] array){
-        int arrayIndex = 0;
-        for(arrayIndex=0; arrayIndex<array.length; arrayIndex++){
+        for(int arrayIndex=0; arrayIndex<array.length; arrayIndex++){
             if(array[arrayIndex] == false) return false;
         }
         return true;
