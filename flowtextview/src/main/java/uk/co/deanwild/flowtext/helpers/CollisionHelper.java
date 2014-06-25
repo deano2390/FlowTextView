@@ -1,10 +1,11 @@
-package uk.flowtext.helpers;
+package uk.co.deanwild.flowtext.helpers;
 
-import uk.flowtext.models.Area;
-import uk.flowtext.models.Obstacle;
-import uk.flowtext.models.Line;
 
 import java.util.ArrayList;
+
+import uk.co.deanwild.flowtext.models.Area;
+import uk.co.deanwild.flowtext.models.Line;
+import uk.co.deanwild.flowtext.models.Obstacle;
 
 /**
  * Created by Dean on 24/06/2014.
