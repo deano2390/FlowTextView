@@ -232,7 +232,6 @@ public class FlowTextView extends RelativeLayout {
 
         return lowestYCoord;
     }
-
 	private int getChunk(String text, float maxWidth){		
 		int length = mTextPaint.breakText(text, true, maxWidth, null);
 		if(length<=0) return length; // if its 0 or less, return it, can't fit any chars on this line
