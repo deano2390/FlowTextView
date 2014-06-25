@@ -4,7 +4,9 @@ FlowTextView
 ![Logo](http://i.imgur.com/iyntFbz.png)
 
 
-Wrapping TextView I wrote a while ago, original project on Google code https://code.google.com/p/android-flowtextview/
+Wrapping TextView for Android
+
+Original project on Google code https://code.google.com/p/android-flowtextview/
 
 A TextView that extends RelativeLayout. The text will wrap around any child views inside the layout.
 
