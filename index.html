@@ -31,37 +31,97 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-        <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
+        <h1>
+<a name="flowtextview" class="anchor" href="#flowtextview"><span class="octicon octicon-link"></span></a>FlowTextView</h1>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+<p><img src="http://i.imgur.com/iyntFbz.png" alt="Logo"></p>
 
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
+<p>Wrapping TextView I wrote a while ago, original project on Google code <a href="https://code.google.com/p/android-flowtextview/">https://code.google.com/p/android-flowtextview/</a></p>
+
+<p>A TextView that extends RelativeLayout. The text will wrap around any child views inside the layout.</p>
+
+<p>This widget has basic support for HTML using Html.fromHtml("&lt; you markup ... /&gt;") It will recognise links, bold italic etc. </p>
+
+<h2>
+<a name="how-to-use" class="anchor" href="#how-to-use"><span class="octicon octicon-link"></span></a>How to use</h2>
+
+<p>Add to your XML layout with your child views inside it:</p>
+
+<div class="highlight highlight-xml"><pre><span class="nt">&lt;com.deanwild.flowtext.FlowTextView</span>
+    <span class="na">android:id=</span><span class="s">"@+id/ftv"</span>
+    <span class="na">android:layout_width=</span><span class="s">"fill_parent"</span>
+    <span class="na">android:layout_height=</span><span class="s">"wrap_content"</span> <span class="nt">&gt;</span>
+
+        <span class="nt">&lt;ImageView</span>
+            <span class="na">android:layout_width=</span><span class="s">"wrap_content"</span>
+            <span class="na">android:layout_height=</span><span class="s">"wrap_content"</span>
+            <span class="na">android:layout_alignParentLeft=</span><span class="s">"true"</span>
+            <span class="na">android:layout_alignParentTop=</span><span class="s">"true"</span>
+            <span class="na">android:padding=</span><span class="s">"10dip"</span>
+            <span class="na">android:src=</span><span class="s">"@drawable/android"</span><span class="nt">/&gt;</span>
+
+        <span class="nt">&lt;ImageView</span>
+            <span class="na">android:layout_width=</span><span class="s">"wrap_content"</span>
+            <span class="na">android:layout_height=</span><span class="s">"wrap_content"</span>
+            <span class="na">android:layout_alignParentRight=</span><span class="s">"true"</span>
+            <span class="na">android:layout_marginTop=</span><span class="s">"400dip"</span>
+            <span class="na">android:padding=</span><span class="s">"10dip"</span>
+            <span class="na">android:src=</span><span class="s">"@drawable/android2"</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/com.deanwild.flowtext.FlowTextView&gt;</span>
+</pre></div>
+
+<p>Then in your code:</p>
+
+<div class="highlight highlight-java"><pre>        <span class="n">FlowTextView</span> <span class="n">flowTextView</span> <span class="o">=</span> <span class="o">(</span><span class="n">FlowTextView</span><span class="o">)</span> <span class="n">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">ftv</span><span class="o">);</span>
+        <span class="n">Spanned</span> <span class="n">html</span> <span class="o">=</span> <span class="n">Html</span><span class="o">.</span><span class="na">fromHtml</span><span class="o">(</span><span class="s">"&lt;html&gt;Your html goes here...."</span><span class="o">);</span>
+        <span class="n">flowTextView</span><span class="o">.</span><span class="na">setText</span><span class="o">(</span><span class="n">html</span><span class="o">);</span>
+</pre></div>
+
+<h2>
+<a name="download" class="anchor" href="#download"><span class="octicon octicon-link"></span></a>Download</h2>
+
+<p>Will be publishing to maven shortly. For now you will need to check out and build manually.</p>
+
+<h2>
+<a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h2>
+
+<pre><code>Copyright 2014 Dean Wild
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 </code></pre>
 
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+<h2>
+<a name="history" class="anchor" href="#history"><span class="octicon octicon-link"></span></a>History</h2>
 
-<h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
+<p>I needed to have a text wrap around images and other views in an Android App but I was surprised and frustrated to discover that there was no way to do this natively.</p>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<p>The general consensus was that the only practical way to achieve this was to use WebViews.</p>
 
-<h3>
-<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
+<p>Using webviews is a bit bloaty and overkill to achieve this. We lose the direct control and performance of using native widgets.</p>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<p>So I developed a native widget which extends RelativeLayout (I figured this was more versatile than LinearLayout) which is capable of painting text around its child views.</p>
 
-<h3>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+<p>The code is still a little rough and I suspect it could be vastly improved in many areas but it seems to work quite well.</p>
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<h2>
+<a name="todo" class="anchor" href="#todo"><span class="octicon octicon-link"></span></a>TODO</h2>
 
-<h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
-
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+<ul>
+<li><p>Add support for parameters to be supplied directly in XML layout.</p></li>
+<li><p>Improve HTML support. For now it can handle basic tags like <b> <i> <br> and  but it would be nice to support everything</i></b></p></li>
+<li><p>Add support for Right to Left text printing.</p></li>
+<li><p>Performance - this can always be improved. The larger the text content the slower this beast gets at the moment. Perhaps ART might do the trick though</p></li>
+</ul>
       </section>
     </div>
 
