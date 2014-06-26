@@ -1,4 +1,4 @@
-package uk.co.deanwild.flowtext.models;
+package uk.co.deanwild.flowtextview.models;
 
 import android.text.TextPaint;
 

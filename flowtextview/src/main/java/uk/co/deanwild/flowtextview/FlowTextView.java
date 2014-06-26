@@ -1,4 +1,4 @@
-package uk.co.deanwild.flowtext;
+package uk.co.deanwild.flowtextview;
 
 import android.content.Context;
 import android.content.res.Configuration;
@@ -15,15 +15,15 @@ import android.widget.RelativeLayout;
 
 import java.util.ArrayList;
 
-import uk.co.deanwild.flowtext.helpers.ClickHandler;
-import uk.co.deanwild.flowtext.helpers.CollisionHelper;
-import uk.co.deanwild.flowtext.helpers.PaintHelper;
-import uk.co.deanwild.flowtext.helpers.SpanParser;
-import uk.co.deanwild.flowtext.listeners.OnLinkClickListener;
-import uk.co.deanwild.flowtext.models.HtmlLink;
-import uk.co.deanwild.flowtext.models.HtmlObject;
-import uk.co.deanwild.flowtext.models.Line;
-import uk.co.deanwild.flowtext.models.Obstacle;
+import uk.co.deanwild.flowtextview.helpers.ClickHandler;
+import uk.co.deanwild.flowtextview.helpers.CollisionHelper;
+import uk.co.deanwild.flowtextview.helpers.PaintHelper;
+import uk.co.deanwild.flowtextview.helpers.SpanParser;
+import uk.co.deanwild.flowtextview.listeners.OnLinkClickListener;
+import uk.co.deanwild.flowtextview.models.HtmlLink;
+import uk.co.deanwild.flowtextview.models.HtmlObject;
+import uk.co.deanwild.flowtextview.models.Line;
+import uk.co.deanwild.flowtextview.models.Obstacle;
 
 public class FlowTextView extends RelativeLayout {
 

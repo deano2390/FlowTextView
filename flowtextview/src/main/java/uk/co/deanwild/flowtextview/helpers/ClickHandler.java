@@ -1,12 +1,12 @@
-package uk.co.deanwild.flowtext.helpers;
+package uk.co.deanwild.flowtextview.helpers;
 
 import android.view.MotionEvent;
 import android.view.View;
 
 import java.util.ArrayList;
 
-import uk.co.deanwild.flowtext.listeners.OnLinkClickListener;
-import uk.co.deanwild.flowtext.models.HtmlLink;
+import uk.co.deanwild.flowtextview.listeners.OnLinkClickListener;
+import uk.co.deanwild.flowtextview.models.HtmlLink;
 
 /**
  * Created by Dean on 24/06/2014.
