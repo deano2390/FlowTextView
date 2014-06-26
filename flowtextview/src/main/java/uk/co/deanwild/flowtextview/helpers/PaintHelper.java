@@ -1,4 +1,4 @@
-package uk.co.deanwild.flowtext.helpers;
+package uk.co.deanwild.flowtextview.helpers;
 
 import android.graphics.Paint;
 import android.text.TextPaint;

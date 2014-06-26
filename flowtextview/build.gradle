@@ -1,11 +1,68 @@
 apply plugin: 'android-library'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+version = "2.0.1"
+group = "uk.co.deanwild"
+
+configurations {
+    archives {
+        extendsFrom configurations.default
+    }
+}
+
+signing {
+    required { has("release") && gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
+}
+
+uploadArchives {
+    configuration = configurations.archives
+    repositories.mavenDeployer {
+        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+        repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
+            authentication(userName: "dw86@kent.ac.uk",
+                    password: "access28")
+        }
+
+        pom.project {
+            name 'Android FlowTextView Library'
+            packaging 'aar'
+            description 'Wrapping TextView for Android'
+            url 'https://github.com/deano2390/FlowTextView'
+
+            scm {
+                url 'scm:git@github.com:deano2390/FlowTextView.git'
+                connection 'scm:git@github.com:deano2390/FlowTextView.git'
+                developerConnection 'scm:git@github.com:deano2390/FlowTextView.git'
+            }
+
+            licenses {
+                license {
+                    name 'The Apache Software License, Version 2.0'
+                    url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    distribution 'repo'
+                }
+            }
+
+            developers {
+                developer {
+                    id 'dw'
+                    name 'Dean Wild'
+                    email 'dw86@kent.ac.uk'
+                }
+            }
+        }
+    }
+}
 
 android {
     compileSdkVersion 16
     buildToolsVersion "19.1.0"
 
     defaultConfig {
-        applicationId "com.pagesuite.coretext"
+        applicationId "uk.co.deanwild.flowtext"
         minSdkVersion 8
         targetSdkVersion 15
     }
@@ -17,3 +74,5 @@ android {
         }
     }
 }
+
+

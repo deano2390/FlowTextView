@@ -1,4 +1,4 @@
-package uk.co.deanwild.flowtext.sample;
+package uk.co.deanwild.flowtextview.sample;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -7,7 +7,7 @@ import android.text.Spanned;
 import android.view.View;
 import android.widget.Button;
 
-import uk.co.deanwild.flowtext.FlowTextView;
+import uk.co.deanwild.flowtextview.FlowTextView;
 
 
 public class MainActivity extends ActionBarActivity implements View.OnClickListener {
@@ -31,8 +31,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         btnDecreasefontSize.setOnClickListener(this);
         Button btnReset = (Button) findViewById(R.id.btn_reset);
         btnReset.setOnClickListener(this);
-
-
     }
 
     @Override
