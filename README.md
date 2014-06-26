@@ -89,7 +89,7 @@ TODO
 
  - Add support for parameters to be supplied directly in XML layout.
  
- - Improve HTML support. For now it can handle basic tags like <![CDATA[<b> <i> <br> and <a>]]> but it would be nice to support everything
+ - Improve HTML support. For now it can handle basic tags like bold, italic, break and a href but it would be nice to support everything
  
  - Add support for Right to Left text printing.
  
