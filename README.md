@@ -17,7 +17,7 @@ How to use
 
 Add to your XML layout with your child views inside it:
 ```xml
-<com.deanwild.flowtext.FlowTextView
+<com.deanwild.flowtextview.FlowTextView
 	android:id="@+id/ftv"
 	android:layout_width="fill_parent"
 	android:layout_height="wrap_content" >
@@ -37,7 +37,7 @@ Add to your XML layout with your child views inside it:
 			android:layout_marginTop="400dip"
 			android:padding="10dip"
 			android:src="@drawable/android2"/>
-</com.deanwild.flowtext.FlowTextView>
+</com.deanwild.flowtextview.FlowTextView>
 ```
 
 Then in your code:
@@ -89,7 +89,7 @@ TODO
 
  - Add support for parameters to be supplied directly in XML layout.
  
- - Improve HTML support. For now it can handle basic tags like <b> <i> <br> and <a> but it would be nice to support everything
+ - Improve HTML support. For now it can handle basic tags like bold, italic, break and a href but it would be nice to support everything
  
  - Add support for Right to Left text printing.
  
