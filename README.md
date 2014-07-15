@@ -48,10 +48,21 @@ Then in your code:
 ```
 
 Download
+Download
 --------
 
-Will be publishing to maven shortly. For now you will need to check out and build manually.
-
+Download [the latest AAR][1] or grab via Maven:
+```xml
+<dependency>
+  <groupId>com.jakewharton</groupId>
+  <artifactId>butterknife</artifactId>
+  <version>5.1.1</version>
+</dependency>
+```
+or Gradle:
+```groovy
+compile 'com.jakewharton:butterknife:5.1.1'
+```
 
 License
 -------
@@ -94,3 +105,6 @@ TODO
  - Add support for Right to Left text printing.
  
  - Performance - this can always be improved. The larger the text content the slower this beast gets at the moment. Perhaps ART might do the trick though
+
+
+[1]: https://oss.sonatype.org/content/repositories/releases/uk/co/deanwild/flowtextview/2.0.2/flowtextview-2.0.2.aar
