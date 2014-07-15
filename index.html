@@ -49,7 +49,7 @@
 
 <p>Add to your XML layout with your child views inside it:</p>
 
-<div class="highlight highlight-xml"><pre><span class="nt">&lt;com.deanwild.flowtext.FlowTextView</span>
+<div class="highlight highlight-xml"><pre><span class="nt">&lt;com.deanwild.flowtextview.FlowTextView</span>
     <span class="na">android:id=</span><span class="s">"@+id/ftv"</span>
     <span class="na">android:layout_width=</span><span class="s">"fill_parent"</span>
     <span class="na">android:layout_height=</span><span class="s">"wrap_content"</span> <span class="nt">&gt;</span>
@@ -69,7 +69,7 @@
             <span class="na">android:layout_marginTop=</span><span class="s">"400dip"</span>
             <span class="na">android:padding=</span><span class="s">"10dip"</span>
             <span class="na">android:src=</span><span class="s">"@drawable/android2"</span><span class="nt">/&gt;</span>
-<span class="nt">&lt;/com.deanwild.flowtext.FlowTextView&gt;</span>
+<span class="nt">&lt;/com.deanwild.flowtextview.FlowTextView&gt;</span>
 </pre></div>
 
 <p>Then in your code:</p>
@@ -82,7 +82,20 @@
 <h2>
 <a name="download" class="anchor" href="#download"><span class="octicon octicon-link"></span></a>Download</h2>
 
-<p>Will be publishing to maven shortly. For now you will need to check out and build manually.</p>
+<p>Download <a href="https://oss.sonatype.org/content/repositories/releases/uk/co/deanwild/flowtextview/2.0.2/flowtextview-2.0.2.aar">the latest AAR</a> or grab via Maven:</p>
+
+<div class="highlight highlight-xml"><pre><span class="nt">&lt;dependency&gt;</span>
+  <span class="nt">&lt;groupId&gt;</span>uk.co.deanwild<span class="nt">&lt;/groupId&gt;</span>
+  <span class="nt">&lt;artifactId&gt;</span>flowtextview<span class="nt">&lt;/artifactId&gt;</span>
+  <span class="nt">&lt;version&gt;</span>2.0.2<span class="nt">&lt;/version&gt;</span>
+  <span class="nt">&lt;type&gt;</span>aar<span class="nt">&lt;/type&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span>
+</pre></div>
+
+<p>or Gradle:</p>
+
+<div class="highlight highlight-groovy"><pre><span class="n">compile</span> <span class="s1">'uk.co.deanwild:flowtextview:2.0.2@aar'</span>
+</pre></div>
 
 <h2>
 <a name="license" class="anchor" href="#license"><span class="octicon octicon-link"></span></a>License</h2>
@@ -120,7 +133,7 @@ limitations under the License.
 
 <ul>
 <li><p>Add support for parameters to be supplied directly in XML layout.</p></li>
-<li><p>Improve HTML support. For now it can handle basic tags like <b> <i> <br> and  but it would be nice to support everything</i></b></p></li>
+<li><p>Improve HTML support. For now it can handle basic tags like bold, italic, break and a href but it would be nice to support everything</p></li>
 <li><p>Add support for Right to Left text printing.</p></li>
 <li><p>Performance - this can always be improved. The larger the text content the slower this beast gets at the moment. Perhaps ART might do the trick though</p></li>
 </ul>
