@@ -54,15 +54,17 @@ Download
 Download [the latest AAR][1] or grab via Maven:
 ```xml
 <dependency>
-  <groupId>com.jakewharton</groupId>
-  <artifactId>butterknife</artifactId>
-  <version>5.1.1</version>
+  <groupId>uk.co.deanwild</groupId>
+  <artifactId>flowtextview</artifactId>
+  <version>2.0.2</version>
+  <type>aar</type>
 </dependency>
 ```
 or Gradle:
 ```groovy
-compile 'com.jakewharton:butterknife:5.1.1'
+compile 'uk.co.deanwild:flowtextview:2.0.2@aar'
 ```
+
 
 License
 -------
