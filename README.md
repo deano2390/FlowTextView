@@ -48,7 +48,6 @@ Then in your code:
 ```
 
 Download
-Download
 --------
 
 Download [the latest AAR][1] or grab via Maven:
