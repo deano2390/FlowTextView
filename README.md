@@ -3,7 +3,7 @@ FlowTextView
 
 A wrapping TextView for Android
 
-Original project on Google code https://code.google.com/p/android-flowtextview/
+I originally uploaded this project on [Google code][3] over 2 years ago but I left it to rot and never maintained it so I decided to 'hub it and start refactoring it. Pull requests welcome!
 
 ![Logo](http://i.imgur.com/iyntFbz.png)
 
@@ -16,6 +16,7 @@ How to use
 --------
 
 Add to your XML layout with your child views inside it:
+
 ```xml
 <uk.co.deanwild.flowtextview.FlowTextView
 	android:id="@+id/ftv"
@@ -114,3 +115,4 @@ TODO
 
 [1]: https://oss.sonatype.org/content/repositories/releases/uk/co/deanwild/flowtextview/2.0.2/flowtextview-2.0.2.aar
 [2]: http://developer.android.com/tools/projects/projects-eclipse.html
+[3]: https://code.google.com/p/android-flowtextview/
