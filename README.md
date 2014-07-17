@@ -17,7 +17,7 @@ How to use
 
 Add to your XML layout with your child views inside it:
 ```xml
-<com.deanwild.flowtextview.FlowTextView
+<uk.co.deanwild.flowtextview.FlowTextView
 	android:id="@+id/ftv"
 	android:layout_width="fill_parent"
 	android:layout_height="wrap_content" >
@@ -37,7 +37,7 @@ Add to your XML layout with your child views inside it:
 			android:layout_marginTop="400dip"
 			android:padding="10dip"
 			android:src="@drawable/android2"/>
-</com.deanwild.flowtextview.FlowTextView>
+</uk.co.deanwild.flowtextview.FlowTextView>
 ```
 
 Then in your code:
@@ -50,7 +50,10 @@ Then in your code:
 Download
 --------
 
-Download [the latest AAR][1] or grab via Maven:
+If you're still using Eclipse then check the source code out and use it as an [Android Library Project][2]
+
+Otherwise you can grab it using Maven:
+
 ```xml
 <dependency>
   <groupId>uk.co.deanwild</groupId>
@@ -60,6 +63,7 @@ Download [the latest AAR][1] or grab via Maven:
 </dependency>
 ```
 or Gradle:
+
 ```groovy
 compile 'uk.co.deanwild:flowtextview:2.0.2@aar'
 ```
@@ -109,3 +113,4 @@ TODO
 
 
 [1]: https://oss.sonatype.org/content/repositories/releases/uk/co/deanwild/flowtextview/2.0.2/flowtextview-2.0.2.aar
+[2]: http://developer.android.com/tools/projects/projects-eclipse.html
