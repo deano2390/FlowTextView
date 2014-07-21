@@ -10,7 +10,7 @@ I originally uploaded this project on [Google code][3] over 2 years ago but I le
 
 A TextView that extends RelativeLayout. The text will wrap around any child views inside the layout.
 
-This widget has basic support for HTML using Html.fromHtml("< you markup ... />") It will recognise links, bold italic etc. 
+This widget has basic support for HTML using Html.fromHtml("< your markup ... />") It will recognise links, bold italic etc. 
 
 How to use
 --------
