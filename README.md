@@ -51,7 +51,7 @@ Then in your code:
 Download
 --------
 
-If you're still using Eclipse then check the source code out and use it as an [Android Library Project][2]
+If you're still using Eclipse then grab the [latest JAR version][2]
 
 Otherwise you can grab it using Maven:
 
@@ -114,5 +114,5 @@ TODO
 
 
 [1]: https://oss.sonatype.org/content/repositories/releases/uk/co/deanwild/flowtextview/2.0.2/flowtextview-2.0.2.aar
-[2]: http://developer.android.com/tools/projects/projects-eclipse.html
+[2]: https://github.com/deano2390/FlowTextView/releases/download/v2.0.2/flowtextview-2.0.2.jar
 [3]: https://code.google.com/p/android-flowtextview/
