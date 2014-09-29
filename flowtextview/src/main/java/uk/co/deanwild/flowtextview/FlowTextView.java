@@ -102,7 +102,7 @@ public class FlowTextView extends RelativeLayout {
         TypedArray ta = context.obtainStyledAttributes(attrs, attrsArray);
         mSpacingAdd = ta.getDimensionPixelSize(0, 0);  // 0 is the index in the array, 0 is the default
         mSpacingMult = ta.getFloat(1, 1.0f);  // 1 is the index in the array, 1.0f is the default
-        mTextsize = getResources().getDisplayMetrics().scaledDensity * ta.getFloat(2, 20F); // this may be incorrect
+        mTextsize = ta.getDimension(2, mTextsize); // 2 is the index in the array of the textSize attribute
         ta.recycle();
     }
 
