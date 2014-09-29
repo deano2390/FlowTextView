@@ -48,7 +48,7 @@ public class FlowTextView extends RelativeLayout {
     private int pageHeight = 0;
     private TextPaint mTextPaint;
     private TextPaint mLinkPaint;
-    private float mTextsize = 20.0f;
+    private float mTextsize = getResources().getDisplayMetrics().scaledDensity * 20.0f;
     private Typeface typeFace;
     private int mDesiredHeight = 100; // height of the whole view
     private boolean needsMeasure = true;
@@ -96,11 +96,13 @@ public class FlowTextView extends RelativeLayout {
         int[] attrsArray = new int[]{
                 android.R.attr.lineSpacingExtra, // 0
                 android.R.attr.lineSpacingMultiplier, // 1
+                android.R.attr.textSize, // 2
         };
 
         TypedArray ta = context.obtainStyledAttributes(attrs, attrsArray);
         mSpacingAdd = ta.getDimensionPixelSize(0, 0);  // 0 is the index in the array, 0 is the default
         mSpacingMult = ta.getFloat(1, 1.0f);  // 1 is the index in the array, 1.0f is the default
+        mTextsize = getResources().getDisplayMetrics().scaledDensity * ta.getFloat(2, 20F); // this may be incorrect
         ta.recycle();
     }
 
