@@ -40,19 +40,18 @@ public class ClickHandler implements View.OnTouchListener{
             distance = getPointDistance(x1, y1, x2, y2);
         }
 
-        if(distance < 10){
-
-            if(event_code == MotionEvent.ACTION_UP){
-                onClick(event.getX(), event.getY());
+        if(distance < 10) { // my random guess at an acceptable drift distance to regard this as a click
+            if (event_code == MotionEvent.ACTION_UP) {
+                // if the event is an "up" and we havn't moved far since the "down", then it's a click
+                return onClick(event.getX(), event.getY()); // process the click and say whether we consumed it
             }
-
             return true;
-        }else{
-            return false;
         }
+
+        return false;
     }
 
-    private void onClick(float x, float y){
+    private boolean onClick(float x, float y){
 
         ArrayList<HtmlLink> links = mSpanParser.getLinks();
 
@@ -66,10 +65,12 @@ public class ClickHandler implements View.OnTouchListener{
                 if(y > tlY && y < brY){
                     // collision
                     onLinkClick(link.url);
-                    return;
+                    return true; // the click was consumed
                 }
             }
         }
+
+        return false;
     }
 
     private void onLinkClick(String url){
