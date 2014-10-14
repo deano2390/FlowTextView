@@ -1,5 +1,7 @@
 package uk.co.deanwild.flowtextview.sample;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Html;
@@ -8,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 
 import uk.co.deanwild.flowtextview.FlowTextView;
+import uk.co.deanwild.flowtextview.listeners.OnLinkClickListener;
 
 
 public class MainActivity extends ActionBarActivity implements View.OnClickListener {
@@ -24,6 +27,16 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         String content = getString(R.string.lorem);
         Spanned html = Html.fromHtml(content);
         flowTextView.setText(html);
+
+
+        // handle link behaviour
+        flowTextView.setOnLinkClickListener(new OnLinkClickListener() {
+            @Override
+            public void onLinkClick(String url) {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                startActivity(browserIntent);
+            }
+        });
 
         Button btnIncreasefontSize = (Button) findViewById(R.id.btn_increase_font_size);
         btnIncreasefontSize.setOnClickListener(this);
