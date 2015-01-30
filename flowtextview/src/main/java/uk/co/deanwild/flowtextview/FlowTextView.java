@@ -109,6 +109,9 @@ public class FlowTextView extends RelativeLayout {
         ta.recycle();
     }
 
+    List<HtmlObject> lineObjects = new ArrayList<>();
+    HtmlObject htmlLine = new HtmlObject("", 0, 0, 0, null);
+
     // INTERESTING DRAWING STUFF
     @Override
     protected void onDraw(Canvas canvas) {
@@ -130,10 +133,8 @@ public class FlowTextView extends RelativeLayout {
         int lineHeight = getLineHeight(); // get the height in pixels of a line for our current TextPaint
         int paddingTop = getPaddingTop();
 
-        List<HtmlObject> lineObjects = new ArrayList<>(); // this will get populated with special html objects we need to render
+        lineObjects.clear(); // this will get populated with special html objects we need to render
         Object[] spans;
-
-        HtmlObject htmlLine;// reuse for single plain lines
 
         mSpanParser.reset();
 
@@ -189,7 +190,11 @@ public class FlowTextView extends RelativeLayout {
 
 
                     if (lineObjects.size() <= 0) { // no funky objects found, add the whole chunk as one object
-                        htmlLine = new HtmlObject(thisLineStr, 0, 0, xOffset, mTextPaint);
+                        htmlLine.content = thisLineStr;
+                        htmlLine.start = 0;
+                        htmlLine.end = 0;
+                        htmlLine.xOffset = xOffset;
+                        htmlLine.paint = mTextPaint;
                         lineObjects.add(htmlLine);
                     }
 
