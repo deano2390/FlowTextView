@@ -1,6 +1,7 @@
 package uk.co.deanwild.flowtextview;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -344,6 +345,16 @@ public class FlowTextView extends RelativeLayout {
         this.mTextsize = textSize;
         mTextPaint.setTextSize(mTextsize);
         mLinkPaint.setTextSize(mTextsize);
+        invalidate();
+    }
+
+    public int getTextColor() {
+        return mTextColor;
+    }
+
+    public void setTextColor(int color) {
+        mTextColor = color;
+        mTextPaint.setColor(mTextColor);
         invalidate();
     }
 
