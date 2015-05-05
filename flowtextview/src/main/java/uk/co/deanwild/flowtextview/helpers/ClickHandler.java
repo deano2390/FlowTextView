@@ -4,6 +4,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import uk.co.deanwild.flowtextview.listeners.OnLinkClickListener;
 import uk.co.deanwild.flowtextview.models.HtmlLink;
@@ -53,7 +54,7 @@ public class ClickHandler implements View.OnTouchListener{
 
     private boolean onClick(float x, float y){
 
-        ArrayList<HtmlLink> links = mSpanParser.getLinks();
+        List<HtmlLink> links = mSpanParser.getLinks();
 
         for (HtmlLink link : links) {
             float tlX = link.xOffset;

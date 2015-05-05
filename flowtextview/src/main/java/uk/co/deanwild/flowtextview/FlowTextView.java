@@ -1,6 +1,7 @@
 package uk.co.deanwild.flowtextview;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -15,6 +16,7 @@ import android.view.View;
 import android.widget.RelativeLayout;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import uk.co.deanwild.flowtextview.helpers.ClickHandler;
 import uk.co.deanwild.flowtextview.helpers.CollisionHelper;
@@ -32,10 +34,10 @@ import uk.co.deanwild.flowtextview.models.Obstacle;
  * provided by Android. In its latest incarnation, it handles android:lineSpacingExtra and
  * android:lineSpacingMultiplier. I also adjusted the layout rules to attempt to account for the new
  * descendance and ascendance of the line height, but I'm not certain that is correct.
- *
+ * <p/>
  * This version also has some demorgan interestingness that I turned around to make less interesting,
  * and I added respect for children's margins when calculating text-drawing bounds.
- *
+ * <p/>
  * I also made minor performance improvements, as the original author had stated that they didn't
  */
 public class FlowTextView extends RelativeLayout {
@@ -49,10 +51,11 @@ public class FlowTextView extends RelativeLayout {
     private TextPaint mTextPaint;
     private TextPaint mLinkPaint;
     private float mTextsize = getResources().getDisplayMetrics().scaledDensity * 20.0f;
+    private int mTextColor = Color.BLACK;
     private Typeface typeFace;
     private int mDesiredHeight = 100; // height of the whole view
     private boolean needsMeasure = true;
-    private final ArrayList<Obstacle> obstacles = new ArrayList<Obstacle>();
+    private final ArrayList<Obstacle> obstacles = new ArrayList<>();
     private CharSequence mText = "";
     private boolean mIsHtml = false;
 
@@ -75,21 +78,20 @@ public class FlowTextView extends RelativeLayout {
     }
 
     private void init(Context context, AttributeSet attrs) {
+        if (attrs != null) {
+            readAttrs(context, attrs);
+        }
+
         mTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mTextPaint.density = getResources().getDisplayMetrics().density;
         mTextPaint.setTextSize(mTextsize);
-        mTextPaint.setColor(Color.BLACK);
+        mTextPaint.setColor(mTextColor);
         mLinkPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
         mLinkPaint.density = getResources().getDisplayMetrics().density;
         mLinkPaint.setTextSize(mTextsize);
         mLinkPaint.setColor(Color.BLUE);
         mLinkPaint.setUnderlineText(true);
         this.setBackgroundColor(Color.TRANSPARENT);
-        this.setOnTouchListener(mClickHandler);
-
-        if (attrs != null) {
-            readAttrs(context, attrs);
-        }
     }
 
     private void readAttrs(Context context, AttributeSet attrs) {
@@ -97,14 +99,19 @@ public class FlowTextView extends RelativeLayout {
                 android.R.attr.lineSpacingExtra, // 0
                 android.R.attr.lineSpacingMultiplier, // 1
                 android.R.attr.textSize, // 2
+                android.R.attr.textColor, // 3
         };
 
         TypedArray ta = context.obtainStyledAttributes(attrs, attrsArray);
         mSpacingAdd = ta.getDimensionPixelSize(0, 0);  // 0 is the index in the array, 0 is the default
         mSpacingMult = ta.getFloat(1, 1.0f);  // 1 is the index in the array, 1.0f is the default
         mTextsize = ta.getDimension(2, mTextsize); // 2 is the index in the array of the textSize attribute
+        mTextColor = ta.getColor(3, Color.BLACK); // 3 is the index of the array of the textColor attribute
         ta.recycle();
     }
+
+    List<HtmlObject> lineObjects = new ArrayList<>();
+    HtmlObject htmlLine = new HtmlObject("", 0, 0, 0, null);
 
     // INTERESTING DRAWING STUFF
     @Override
@@ -127,10 +134,8 @@ public class FlowTextView extends RelativeLayout {
         int lineHeight = getLineHeight(); // get the height in pixels of a line for our current TextPaint
         int paddingTop = getPaddingTop();
 
-        ArrayList<HtmlObject> lineObjects = new ArrayList<HtmlObject>(); // this will get populated with special html objects we need to render
+        lineObjects.clear(); // this will get populated with special html objects we need to render
         Object[] spans;
-
-        HtmlObject htmlLine;// reuse for single plain lines
 
         mSpanParser.reset();
 
@@ -186,7 +191,11 @@ public class FlowTextView extends RelativeLayout {
 
 
                     if (lineObjects.size() <= 0) { // no funky objects found, add the whole chunk as one object
-                        htmlLine = new HtmlObject(thisLineStr, 0, 0, xOffset, mTextPaint);
+                        htmlLine.content = thisLineStr;
+                        htmlLine.start = 0;
+                        htmlLine.end = 0;
+                        htmlLine.xOffset = xOffset;
+                        htmlLine.paint = mTextPaint;
                         lineObjects.add(htmlLine);
                     }
 
@@ -336,6 +345,16 @@ public class FlowTextView extends RelativeLayout {
         this.mTextsize = textSize;
         mTextPaint.setTextSize(mTextsize);
         mLinkPaint.setTextSize(mTextsize);
+        invalidate();
+    }
+
+    public int getTextColor() {
+        return mTextColor;
+    }
+
+    public void setTextColor(int color) {
+        mTextColor = color;
+        mTextPaint.setColor(mTextColor);
         invalidate();
     }
 

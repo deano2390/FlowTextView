@@ -9,6 +9,7 @@ import android.text.style.URLSpan;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import uk.co.deanwild.flowtextview.FlowTextView;
 import uk.co.deanwild.flowtextview.models.HtmlLink;
@@ -26,13 +27,13 @@ public class SpanParser {
 
     private final PaintHelper mPaintHelper;
     private final FlowTextView mFlowTextView;
-    private final ArrayList<HtmlLink> mLinks = new ArrayList<HtmlLink>();
+    private final List<HtmlLink> mLinks = new ArrayList<>();
     private int mTextLength = 0;
     private Spannable mSpannable;
 
-    private final HashMap<Integer, HtmlObject> sorterMap = new HashMap<Integer, HtmlObject>();
+    private final HashMap<Integer, HtmlObject> sorterMap = new HashMap<>();
 
-    public float parseSpans(ArrayList<HtmlObject> objects, Object[] spans, int lineStart, int lineEnd, float baseXOffset){
+    public float parseSpans(List<HtmlObject> objects, Object[] spans, int lineStart, int lineEnd, float baseXOffset){
 
         sorterMap.clear();
         int charFlagSize = lineEnd - lineStart;
@@ -68,7 +69,7 @@ public class SpanParser {
                 if(charCounter >= charFlagSize) break;
 
 
-                if(charFlags[charCounter]==true){
+                if(charFlags[charCounter]){
                     charCounter++;
                     continue;
                 }
@@ -78,7 +79,7 @@ public class SpanParser {
                     if(charCounter > charFlagSize) break;
 
                     if(charCounter < charFlagSize){
-                        if(charFlags[charCounter] == false){
+                        if(!charFlags[charCounter]){
                             charFlags[charCounter] = true;// mark as filled
                             charCounter++;
                             continue;
@@ -163,13 +164,13 @@ public class SpanParser {
 
     private static boolean isArrayFull(boolean[] array){
         for(int arrayIndex=0; arrayIndex<array.length; arrayIndex++){
-            if(array[arrayIndex] == false) return false;
+            if(!array[arrayIndex]) return false;
         }
         return true;
     }
 
     // GETTERS AND SETTERS
-    public ArrayList<HtmlLink> getLinks() {
+    public List<HtmlLink> getLinks() {
         return mLinks;
     }
 
