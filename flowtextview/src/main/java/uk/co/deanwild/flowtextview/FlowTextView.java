@@ -48,7 +48,7 @@ public class FlowTextView extends RelativeLayout {
     private int pageHeight = 0;
     private TextPaint mTextPaint;
     private TextPaint mLinkPaint;
-    private float mTextsize = getResources().getDisplayMetrics().scaledDensity * 20.0f;
+    private float mTextsize = getResources().getDisplayMetrics().scaledDensity * 10.0f;
     private Typeface typeFace;
     private int mDesiredHeight = 100; // height of the whole view
     private boolean needsMeasure = true;
