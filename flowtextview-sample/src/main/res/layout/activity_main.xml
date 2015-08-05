@@ -23,6 +23,7 @@
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentTop="true"
                 android:padding="10dip"
+                android:layout_marginLeft="50dp"
                 android:src="@drawable/android"/>
 
             <ImageView
@@ -30,6 +31,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true"
                 android:layout_marginTop="400dip"
+                android:layout_marginRight="50dp"
                 android:padding="10dip"
                 android:src="@drawable/android2"/>
         </uk.co.deanwild.flowtextview.FlowTextView>

@@ -255,9 +255,11 @@ public class FlowTextView extends RelativeLayout {
                 layoutParams = (LayoutParams) child.getLayoutParams();
                 Obstacle obstacle = new Obstacle();
                 obstacle.topLeftx = child.getLeft() - layoutParams.leftMargin;
-                obstacle.topLefty = child.getTop() - layoutParams.topMargin;
+
+                int top = child.getTop();
+                obstacle.topLefty = child.getTop();
                 obstacle.bottomRightx = obstacle.topLeftx + layoutParams.leftMargin + child.getWidth() + layoutParams.rightMargin; // padding should probably be included as well
-                obstacle.bottomRighty = obstacle.topLefty + +layoutParams.topMargin + child.getHeight() + layoutParams.bottomMargin; // padding should probably be included as well
+                obstacle.bottomRighty = obstacle.topLefty + child.getHeight() + layoutParams.bottomMargin; // padding should probably be included as well
                 obstacles.add(obstacle);
                 if (obstacle.bottomRighty > lowestYCoord) lowestYCoord = obstacle.bottomRighty;
             }
