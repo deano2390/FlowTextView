@@ -48,25 +48,22 @@ Then in your code:
         flowTextView.setText(html);
 ```
 
-Download
+Gradle
 --------
 
-If you're still using Eclipse then grab the [latest JAR version][2]
-
-Otherwise you can grab it using Maven:
-
-```xml
-<dependency>
-  <groupId>uk.co.deanwild</groupId>
-  <artifactId>flowtextview</artifactId>
-  <version>2.0.2</version>
-  <type>aar</type>
-</dependency>
-```
-or Gradle:
+Add jitpack to your your build.gradle at the end of repositories:
 
 ```groovy
-compile 'uk.co.deanwild:flowtextview:2.0.2@aar'
+repositories {
+	    // ...
+	    maven { url "https://jitpack.io" }
+	}
+```
+
+Add the dependency:
+
+```groovy
+compile 'com.github.deano2390:FlowTextView:2.0.3'
 ```
 
 
