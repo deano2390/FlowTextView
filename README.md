@@ -63,7 +63,7 @@ repositories {
 Add the dependency:
 
 ```groovy
-compile 'com.github.deano2390:FlowTextView:2.0.4'
+compile 'com.github.deano2390:FlowTextView:2.0.5'
 ```
 
 
