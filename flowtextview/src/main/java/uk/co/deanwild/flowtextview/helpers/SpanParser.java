@@ -4,6 +4,7 @@ import android.graphics.Typeface;
 import android.text.Spannable;
 import android.text.TextPaint;
 import android.text.style.StyleSpan;
+import android.text.style.TypefaceSpan;
 import android.text.style.URLSpan;
 
 import java.util.ArrayList;
@@ -112,11 +113,12 @@ public class SpanParser {
     }
 
     private HtmlObject parseSpan(Object span, String content, int start, int end){
-
         if(span instanceof URLSpan){
             return getHtmlLink((URLSpan) span, content, start, end, 0);
-        }else if(span instanceof StyleSpan){
+        }else if(span instanceof StyleSpan) {
             return getStyledObject((StyleSpan) span, content, start, end, 0);
+        } else if (span instanceof TypefaceSpan) {
+            return getTypefaceObject((TypefaceSpan) span, content, start, end, 0);
         }else{
             return getHtmlObject(content, start, end, 0);
         }
@@ -131,6 +133,19 @@ public class SpanParser {
         span.updateDrawState(paint);
         span.updateMeasureState(paint);
         HtmlObject  obj = new HtmlObject(content, start, end, thisXOffset, paint);
+        obj.recycle = true;
+        return obj;
+    }
+
+    private HtmlObject getTypefaceObject(final TypefaceSpan span, final String content, final int start, final int end, final float thisXOffset) {
+        TextPaint paint = mPaintHelper.getPaintFromHeap();
+        paint.setTextSize(mFlowTextView.getTextsize());
+        paint.setColor(mFlowTextView.getColor());
+
+        span.updateDrawState(paint);
+        span.updateMeasureState(paint);
+
+        HtmlObject obj = new HtmlObject(content, start, end, thisXOffset, paint);
         obj.recycle = true;
         return obj;
     }
