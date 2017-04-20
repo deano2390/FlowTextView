@@ -1,7 +1,6 @@
 package uk.co.deanwild.flowtextview;
 
 import android.content.Context;
-import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -92,6 +91,7 @@ public class FlowTextView extends RelativeLayout {
         mLinkPaint.setColor(Color.BLUE);
         mLinkPaint.setUnderlineText(true);
         this.setBackgroundColor(Color.TRANSPARENT);
+        setOnTouchListener(mClickHandler);
     }
 
     private void readAttrs(Context context, AttributeSet attrs) {
