@@ -62,6 +62,11 @@ public class FlowTextView extends RelativeLayout {
     private float mSpacingMult;
     private float mSpacingAdd;
 
+    public boolean onTouchEvent（MotinEvent event）{
+        mClickHandler.onTouch(this,event);
+        return super.onTouchEvent(event);
+    }
+    
     public FlowTextView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         init(context, attrs);
