@@ -42,7 +42,7 @@ public class ClickHandler implements View.OnTouchListener{
         }
 
         if(distance < 10) { // my random guess at an acceptable drift distance to regard this as a click
-            if (event_code == MotionEvent.ACTION_UP) {
+            if (event_code == MotionEvent.ACTION_DOWN) {
                 // if the event is an "up" and we havn't moved far since the "down", then it's a click
                 return onClick(event.getX(), event.getY()); // process the click and say whether we consumed it
             }
