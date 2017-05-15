@@ -11,7 +11,7 @@ publishing {
         maven(MavenPublication) {
             groupId 'com.github.deano2390'
             artifactId 'FlowTextView'
-            version '2.0.7'
+            version '2.0.8'
 
             artifact(sourceJar)
             artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
