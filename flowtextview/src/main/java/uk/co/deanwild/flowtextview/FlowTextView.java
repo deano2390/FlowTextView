@@ -161,7 +161,7 @@ public class FlowTextView extends RelativeLayout {
                         chunkSize = getChunk(thisBlock, maxWidth);
                         int thisCharOffset = charOffsetEnd + chunkSize;
 
-                        if (chunkSize > 1) {
+                        if (chunkSize >= 1) {
                             thisLineStr = thisBlock.substring(0, chunkSize);
                         } else {
                             thisLineStr = "";
