@@ -3,7 +3,7 @@ FlowTextView
 
 A wrapping TextView for Android
 
-I originally uploaded this project on [Google code][3] over 2 years ago but I left it to rot and never maintained it so I decided to 'hub it and start refactoring it. Pull requests welcome!
+Pull requests welcome!
 
 ![Logo](http://i.imgur.com/iyntFbz.png)
 
