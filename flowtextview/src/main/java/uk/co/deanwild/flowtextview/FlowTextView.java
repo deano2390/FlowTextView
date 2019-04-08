@@ -1,7 +1,6 @@
 package uk.co.deanwild.flowtextview;
 
 import android.content.Context;
-import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -92,6 +91,7 @@ public class FlowTextView extends RelativeLayout {
         mLinkPaint.setColor(Color.BLUE);
         mLinkPaint.setUnderlineText(true);
         this.setBackgroundColor(Color.TRANSPARENT);
+        setOnTouchListener(mClickHandler);
     }
 
     private void readAttrs(Context context, AttributeSet attrs) {
@@ -139,14 +139,22 @@ public class FlowTextView extends RelativeLayout {
 
         mSpanParser.reset();
 
+        boolean lastBlockWasCountedAsEmptyLine = false;
+
         for (int block_no = 0; block_no <= blocks.length - 1; block_no++) // at the highest level we iterate through each 'block' of text
         {
             String thisBlock = blocks[block_no];
             if (thisBlock.length() <= 0) { //is a line break
-                lineIndex++; // we need a new line
-                charOffsetEnd += 2;
-                charOffsetStart = charOffsetEnd;
+                if (lastBlockWasCountedAsEmptyLine) {
+                    lastBlockWasCountedAsEmptyLine = false;
+                } else {
+                    lineIndex++; // we need a new line
+                    charOffsetEnd += 2;
+                    charOffsetStart = charOffsetEnd;
+                    lastBlockWasCountedAsEmptyLine = true;
+                }
             } else { // is some actual text
+                lastBlockWasCountedAsEmptyLine = false;
 
                 while (thisBlock.length() > 0) { // churn through the block spitting it out onto seperate lines until there is nothing left to render
                     lineIndex++; // we need a new line

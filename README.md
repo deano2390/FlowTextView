@@ -66,6 +66,11 @@ Add the dependency:
 compile 'com.github.deano2390:FlowTextView:2.0.5'
 ```
 
+Install to local maven, from `flowtextview/`:
+```
+gradle clean build publishToMavenLocal
+```
+
 
 License
 -------
