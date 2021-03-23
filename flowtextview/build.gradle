@@ -1,16 +1,11 @@
 buildscript {
     repositories {
-        maven { url 'http://download.crashlytics.com/maven' }
-
-
         maven {
             url "https://raw.github.com/embarkmobile/zxing-android-minimal/mvn-repo/maven-repository/"
         }
-
     }
 
     dependencies {
-        classpath 'com.crashlytics.tools.gradle:crashlytics-gradle:1.+'
     }
 }
 
@@ -19,12 +14,12 @@ apply plugin: 'maven'
 apply plugin: 'signing'
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion "25.0.2"
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
-        minSdkVersion 8
-        targetSdkVersion 15
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
     }
 
     buildTypes {
