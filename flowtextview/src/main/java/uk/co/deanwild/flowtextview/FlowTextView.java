@@ -334,7 +334,7 @@ public class FlowTextView extends RelativeLayout {
             height = mDesiredHeight;
         }
 
-        setMeasuredDimension(width, height);
+        setMeasuredDimension(width, height + getLineHeight());
     }
 
     // GETTERS AND SETTERS
