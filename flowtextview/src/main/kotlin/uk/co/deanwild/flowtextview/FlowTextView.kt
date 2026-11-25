@@ -1,23 +1,31 @@
 package uk.co.deanwild.flowtextview
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.Typeface
 import android.text.Layout
+import android.text.Spanned
 import android.text.TextDirectionHeuristics
 import android.text.TextPaint
+import android.text.style.ClickableSpan
+import android.text.style.URLSpan
 import android.util.AttributeSet
 import android.util.TypedValue
+import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.widget.RelativeLayout
 import uk.co.deanwild.flowtextview.internal.FlowLayoutConfig
 import uk.co.deanwild.flowtextview.internal.FlowLayoutEngine
 import uk.co.deanwild.flowtextview.internal.FlowLayoutResult
 import uk.co.deanwild.flowtextview.internal.Obstacle
 import uk.co.deanwild.flowtextview.listeners.OnLinkClickListener
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
@@ -113,13 +121,32 @@ public open class FlowTextView @JvmOverloads constructor(
     public val lineHeight: Int
         get() = (textPaint.getFontMetricsInt(null) * config.lineSpacingMultiplier + config.lineSpacingExtra).roundToInt()
 
-    /** Notified when a link in the text is tapped. */
+    /**
+     * Notified with the URL when a [URLSpan] link is tapped, instead of the span opening it.
+     * Other [ClickableSpan]s always receive [ClickableSpan.onClick].
+     */
     public var onLinkClickListener: OnLinkClickListener? = null
+
+    /** The colour drawn behind a link while it is pressed. */
+    public var highlightColor: Int = defaultHighlightColor(context)
+        set(value) {
+            field = value
+            highlightPaint.color = value
+            if (pressedLink != null) invalidate()
+        }
+
+    private val highlightPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val highlightPath = Path()
+    private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
+    private var pressedLink: ClickableSpan? = null
+    private var downX = 0f
+    private var downY = 0f
 
     /** The current text layout. Visible for tests. */
     internal val currentTextLayout: FlowLayoutResult get() = textLayout
 
     init {
+        highlightPaint.color = highlightColor
         // ViewGroups skip onDraw by default.
         setWillNotDraw(false)
         initialised = true
@@ -193,8 +220,80 @@ public open class FlowTextView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        for (segment in textLayout.segments) segment.draw(canvas)
+        val link = pressedLink
+        val spanned = text as? Spanned
+        val linkStart = if (link != null && spanned != null) spanned.getSpanStart(link) else -1
+        val linkEnd = if (link != null && spanned != null) spanned.getSpanEnd(link) else -1
+        for (segment in textLayout.segments) {
+            val start = max(linkStart, segment.start)
+            val end = min(linkEnd, segment.end)
+            if (linkStart >= 0 && start < end) {
+                segment.layout.getSelectionPath(start, end, highlightPath)
+                segment.draw(canvas, highlightPath, highlightPaint)
+            } else {
+                segment.draw(canvas)
+            }
+        }
     }
+
+    // region links
+
+    // Links are not the view's own click: accessibility users reach them through the virtual view
+    // hierarchy instead, so performClick() is deliberately not called for a link tap.
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                val link = clickableSpanAt(event.x, event.y) ?: return super.onTouchEvent(event)
+                downX = event.x
+                downY = event.y
+                setPressedLink(link)
+                return true
+            }
+            MotionEvent.ACTION_MOVE -> {
+                if (pressedLink == null) return super.onTouchEvent(event)
+                if (abs(event.x - downX) > touchSlop || abs(event.y - downY) > touchSlop) setPressedLink(null)
+                return true
+            }
+            MotionEvent.ACTION_UP -> {
+                val link = pressedLink ?: return super.onTouchEvent(event)
+                setPressedLink(null)
+                if (clickableSpanAt(event.x, event.y) === link) performLinkClick(link)
+                return true
+            }
+            MotionEvent.ACTION_CANCEL -> {
+                if (pressedLink == null) return super.onTouchEvent(event)
+                setPressedLink(null)
+                return true
+            }
+        }
+        return pressedLink != null || super.onTouchEvent(event)
+    }
+
+    /** Returns the [ClickableSpan] drawn under ([x], [y]) in view coordinates, if any. */
+    internal fun clickableSpanAt(x: Float, y: Float): ClickableSpan? {
+        val spanned = text as? Spanned ?: return null
+        val index = textLayout.characterAt(x, y)
+        if (index < 0) return null
+        return spanned.getSpans(index, index + 1, ClickableSpan::class.java).firstOrNull()
+    }
+
+    internal fun performLinkClick(span: ClickableSpan) {
+        val listener = onLinkClickListener
+        if (listener != null && span is URLSpan) {
+            listener.onLinkClick(span.url)
+        } else {
+            span.onClick(this)
+        }
+    }
+
+    private fun setPressedLink(link: ClickableSpan?) {
+        if (link === pressedLink) return
+        pressedLink = link
+        invalidate()
+    }
+
+    // endregion
 
     override fun drawableStateChanged() {
         super.drawableStateChanged()
@@ -293,6 +392,17 @@ public open class FlowTextView @JvmOverloads constructor(
 
     private companion object {
         const val DEFAULT_TEXT_SIZE_SP = 20f
+
+        const val FALLBACK_HIGHLIGHT_COLOR = 0x6633B5E5
+
+        fun defaultHighlightColor(context: Context): Int {
+            val a = context.obtainStyledAttributes(intArrayOf(android.R.attr.textColorHighlight))
+            try {
+                return a.getColor(0, FALLBACK_HIGHLIGHT_COLOR)
+            } finally {
+                a.recycle()
+            }
+        }
 
         fun defaultTextColors(context: Context): ColorStateList {
             val a = context.obtainStyledAttributes(intArrayOf(android.R.attr.textColorPrimary))

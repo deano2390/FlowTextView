@@ -1,6 +1,8 @@
 package uk.co.deanwild.flowtextview.internal
 
 import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Path
 import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
@@ -44,14 +46,54 @@ internal class FlowSegment(
     /** Bottom of the last line in view coordinates. */
     val bottom: Int get() = top + layout.getLineTop(lineCount)
 
-    fun draw(canvas: Canvas) {
+    /**
+     * Draws the segment. If [highlight] is given, it is a path in this segment's coordinates
+     * (see [Layout.getSelectionPath]) filled with [highlightPaint] behind the text.
+     */
+    fun draw(canvas: Canvas, highlight: Path? = null, highlightPaint: Paint? = null) {
         val save = canvas.save()
         canvas.translate(left.toFloat(), top.toFloat())
         if (lineCount < layout.lineCount) {
             canvas.clipRect(-UNBOUNDED, -UNBOUNDED, UNBOUNDED, layout.getLineTop(lineCount).toFloat())
         }
-        layout.draw(canvas)
+        layout.draw(canvas, highlight, highlightPaint, 0)
         canvas.restoreToCount(save)
+    }
+
+    /**
+     * Returns the index of the character drawn under ([x], [y]) in view coordinates, or -1 if the
+     * point is not over this segment's text (including the empty space beside a short line).
+     */
+    fun characterAt(x: Float, y: Float): Int {
+        if (y < top || y >= bottom) return -1
+        val line = layout.getLineForVertical((y - top).toInt())
+        if (line >= lineCount) return -1
+
+        val text = layout.text
+        val start = layout.getLineStart(line)
+        var end = layout.getLineEnd(line)
+        while (end > start && text[end - 1].isWhitespace()) end--
+        if (end == start) return -1
+
+        // getLineLeft()/getLineRight() ignore per-line indents, so derive the extent of the text
+        // from where its first character is drawn and its width.
+        val lx = x - left
+        val rtl = layout.getParagraphDirection(line) == Layout.DIR_RIGHT_TO_LEFT
+        val origin = layout.getPrimaryHorizontal(start)
+        val extent = layout.getLineMax(line)
+        val (lo, hi) = if (rtl) (origin - extent) to origin else origin to (origin + extent)
+        if (lx < lo || lx > hi) return -1
+
+        // getOffsetForHorizontal() returns the nearest caret position; pick the character on the
+        // side of it that the point falls on.
+        val offset = layout.getOffsetForHorizontal(line, lx)
+        val char = when {
+            offset >= end -> end - 1
+            (!rtl && lx < layout.getPrimaryHorizontal(offset)) ||
+                (rtl && lx > layout.getPrimaryHorizontal(offset)) -> offset - 1
+            else -> offset
+        }
+        return char.coerceIn(start, end - 1)
     }
 
     private companion object {
@@ -63,6 +105,14 @@ internal class FlowSegment(
 internal class FlowLayoutResult(val segments: List<FlowSegment>, val bottom: Int) {
     companion object {
         fun empty(top: Int) = FlowLayoutResult(emptyList(), top)
+    }
+
+    /** Index of the character drawn under ([x], [y]) in view coordinates, or -1. */
+    fun characterAt(x: Float, y: Float): Int {
+        for (segment in segments) {
+            if (y >= segment.top && y < segment.bottom) return segment.characterAt(x, y)
+        }
+        return -1
     }
 }
 
