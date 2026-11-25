@@ -3,7 +3,7 @@ package uk.co.deanwild.flowtextview.sample;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.text.Html;
 import android.text.Spanned;
 import android.view.View;
@@ -13,7 +13,7 @@ import uk.co.deanwild.flowtextview.FlowTextView;
 import uk.co.deanwild.flowtextview.listeners.OnLinkClickListener;
 
 
-public class MainActivity extends ActionBarActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final float defaultFontSize = 20.0f;
 
@@ -23,7 +23,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        flowTextView = (FlowTextView) findViewById(R.id. ftv);
+        flowTextView = (FlowTextView) findViewById(R.id.ftv);
         String content = getString(R.string.lorem);
         Spanned html = Html.fromHtml(content);
         flowTextView.setText(html);
@@ -48,18 +48,14 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        switch(v.getId()) {
-            case R.id.btn_increase_font_size:
-                increaseFontSize();
-                break;
-            case R.id.btn_decrease_font_size:
-                decreaseFontSize();
-                break;
-            case R.id.btn_reset:
-                reset();
-                break;
-            default:
-                break;
+        // Resource IDs are no longer constants (non-final R classes), so a switch cannot be used.
+        int id = v.getId();
+        if (id == R.id.btn_increase_font_size) {
+            increaseFontSize();
+        } else if (id == R.id.btn_decrease_font_size) {
+            decreaseFontSize();
+        } else if (id == R.id.btn_reset) {
+            reset();
         }
     }
 
