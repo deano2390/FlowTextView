@@ -4,6 +4,7 @@ kotlin = "2.4.21"
 compileSdk = "37"
 minSdk = "23"
 appcompat = "1.8.0"
+core = "1.19.1"
 junit = "4.13.2"
 robolectric = "4.18.1"
 truth = "1.4.5"
@@ -11,6 +12,7 @@ androidx-test-core = "1.7.0"
 androidx-test-junit = "1.3.0"
 
 [libraries]
+androidx-core = { module = "androidx.core:core-ktx", version.ref = "core" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 
 junit = { module = "junit:junit", version.ref = "junit" }

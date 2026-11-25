@@ -60,12 +60,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void increaseFontSize(){
-        float currentFontSize = flowTextView.getTextsize();
+        float currentFontSize = flowTextView.getTextSize();
         flowTextView.setTextSize(currentFontSize+1);
     }
 
     private void decreaseFontSize(){
-        float currentFontSize = flowTextView.getTextsize();
+        float currentFontSize = flowTextView.getTextSize();
         flowTextView.setTextSize(currentFontSize-1);
     }
 
