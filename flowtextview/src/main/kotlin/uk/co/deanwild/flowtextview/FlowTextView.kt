@@ -527,6 +527,55 @@ public open class FlowTextView @JvmOverloads constructor(
 
     // endregion
 
+    // region 2.x compatibility
+
+    /** The text size in pixels. */
+    @Deprecated("Use textSize.", ReplaceWith("textSize"))
+    public fun getTextsize(): Float = textSize
+
+    /** The text colour. */
+    @Deprecated("Use textColor.", ReplaceWith("textColor"))
+    public fun getColor(): Int = textColor
+
+    /** Sets the text colour. */
+    @Deprecated("Use textColor.", ReplaceWith("this.textColor = color"))
+    public fun setColor(color: Int) {
+        textColor = color
+    }
+
+    /** The typeface. */
+    @Deprecated("Use typeface.", ReplaceWith("typeface"))
+    public fun getTypeFace(): Typeface? = typeface
+
+    /**
+     * Copies [paint]'s properties (size, colour, typeface, flags…) into [textPaint]. The view no
+     * longer swaps in a caller-supplied paint, so later changes to [paint] have no effect.
+     */
+    @Deprecated("Configure textPaint, or use the textSize, textColor and typeface properties.")
+    public fun setTextPaint(paint: TextPaint) {
+        textPaint.set(paint)
+        textColors = ColorStateList.valueOf(paint.color)
+        onTextLayoutInputsChanged()
+    }
+
+    /**
+     * Returns a snapshot of how links are painted. Links are now styled by their spans using
+     * [linkTextColor], so changing the returned paint has no effect.
+     */
+    @Deprecated("Use linkTextColor; links are styled by their spans.", ReplaceWith("linkTextColor"))
+    public fun getLinkPaint(): TextPaint = TextPaint(textPaint).apply {
+        color = textPaint.linkColor
+        isUnderlineText = true
+    }
+
+    /** Applies [paint]'s colour to links. Links keep the text's size and typeface. */
+    @Deprecated("Use linkTextColor; links are styled by their spans.", ReplaceWith("this.linkTextColor = paint.color"))
+    public fun setLinkPaint(paint: TextPaint) {
+        linkTextColor = paint.color
+    }
+
+    // endregion
+
     private data class LayoutKey(
         val width: Int,
         val paddingLeft: Int,
