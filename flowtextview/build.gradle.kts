@@ -31,7 +31,8 @@ kotlin {
 }
 
 dependencies {
-    testImplementation(libs.androidx.core)
+    implementation(libs.androidx.core)
+
     testImplementation(libs.junit)
     testImplementation(libs.truth)
     testImplementation(libs.robolectric)

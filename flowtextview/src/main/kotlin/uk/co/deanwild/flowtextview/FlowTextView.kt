@@ -10,6 +10,7 @@ import android.graphics.Path
 import android.graphics.Typeface
 import android.text.Layout
 import android.text.Spanned
+import android.text.TextDirectionHeuristic
 import android.text.TextDirectionHeuristics
 import android.text.TextPaint
 import android.text.style.ClickableSpan
@@ -48,7 +49,7 @@ import kotlin.math.roundToInt
 public open class FlowTextView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0,
+    defStyleAttr: Int = R.attr.flowTextViewStyle,
     defStyleRes: Int = 0,
 ) : RelativeLayout(context, attrs, defStyleAttr, defStyleRes) {
 
@@ -59,7 +60,6 @@ public open class FlowTextView @JvmOverloads constructor(
     public val textPaint: TextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
         density = resources.displayMetrics.density
         textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, DEFAULT_TEXT_SIZE_SP, resources.displayMetrics)
-        linkColor = Color.BLUE
     }
 
     private var config = FlowLayoutConfig()
@@ -121,6 +121,56 @@ public open class FlowTextView @JvmOverloads constructor(
     public val lineHeight: Int
         get() = (textPaint.getFontMetricsInt(null) * config.lineSpacingMultiplier + config.lineSpacingExtra).roundToInt()
 
+    /** The colours of links for each drawable state, applied through `TextPaint.linkColor`. */
+    public var linkTextColors: ColorStateList = ColorStateList.valueOf(DEFAULT_LINK_COLOR)
+        set(value) {
+            field = value
+            updateTextColor()
+        }
+
+    /** The link colour for the current drawable state. Setting it replaces [linkTextColors]. */
+    public var linkTextColor: Int
+        get() = textPaint.linkColor
+        set(value) {
+            linkTextColors = ColorStateList.valueOf(value)
+        }
+
+    /** Letter spacing in ems, as for [android.widget.TextView.setLetterSpacing]. */
+    public var letterSpacing: Float
+        get() = textPaint.letterSpacing
+        set(value) {
+            if (value == textPaint.letterSpacing) return
+            textPaint.letterSpacing = value
+            onTextLayoutInputsChanged()
+        }
+
+    /** Whether extra space is left above and below the text for accents and descenders. */
+    public var includeFontPadding: Boolean
+        get() = config.includeFontPadding
+        set(value) = updateConfig { it.copy(includeFontPadding = value) }
+
+    /**
+     * One of the `Layout.BREAK_STRATEGY_*` constants. Lines beside a child always use
+     * [Layout.BREAK_STRATEGY_SIMPLE], because the platform's other strategies do not honour the
+     * shortened line widths.
+     */
+    public var breakStrategy: Int
+        get() = config.breakStrategy
+        set(value) = updateConfig { it.copy(breakStrategy = value) }
+
+    /** One of the `Layout.HYPHENATION_FREQUENCY_*` constants. */
+    public var hyphenationFrequency: Int
+        get() = config.hyphenationFrequency
+        set(value) = updateConfig { it.copy(hyphenationFrequency = value) }
+
+    /**
+     * One of the `LineBreaker.JUSTIFICATION_MODE_*` constants (`Layout.JUSTIFICATION_MODE_*` from
+     * API 35). Justification requires API 26; on older versions this has no effect.
+     */
+    public var justificationMode: Int
+        get() = config.justificationMode
+        set(value) = updateConfig { it.copy(justificationMode = value) }
+
     /**
      * Notified with the URL when a [URLSpan] link is tapped, instead of the span opening it.
      * Other [ClickableSpan]s always receive [ClickableSpan.onClick].
@@ -146,9 +196,10 @@ public open class FlowTextView @JvmOverloads constructor(
     internal val currentTextLayout: FlowLayoutResult get() = textLayout
 
     init {
-        highlightPaint.color = highlightColor
         // ViewGroups skip onDraw by default.
         setWillNotDraw(false)
+        readAttributes(context, attrs, defStyleAttr, defStyleRes)
+        highlightPaint.color = highlightColor
         initialised = true
         updateTextColor()
     }
@@ -156,6 +207,25 @@ public open class FlowTextView @JvmOverloads constructor(
     /** Sets the text size in the given [unit], one of the [TypedValue] `COMPLEX_UNIT_*` constants. */
     public fun setTextSize(unit: Int, size: Float) {
         textSize = TypedValue.applyDimension(unit, size, resources.displayMetrics)
+    }
+
+    /**
+     * Sets the typeface and style, as for [android.widget.TextView.setTypeface]. Styles the
+     * typeface does not provide are synthesised (fake bold, skewed italic).
+     */
+    public fun setTypeface(typeface: Typeface?, style: Int) {
+        if (style > 0) {
+            val styled = if (typeface == null) Typeface.defaultFromStyle(style) else Typeface.create(typeface, style)
+            val missing = style and styled.style.inv()
+            textPaint.isFakeBoldText = missing and Typeface.BOLD != 0
+            textPaint.textSkewX = if (missing and Typeface.ITALIC != 0) -0.25f else 0f
+            textPaint.typeface = styled
+        } else {
+            textPaint.isFakeBoldText = false
+            textPaint.textSkewX = 0f
+            textPaint.typeface = typeface
+        }
+        onTextLayoutInputsChanged()
     }
 
     /** Sets line spacing as for [android.widget.TextView.setLineSpacing]. */
@@ -310,15 +380,10 @@ public open class FlowTextView @JvmOverloads constructor(
         val key = LayoutKey(width, paddingLeft, paddingTop, paddingRight, collectObstacles())
         if (textLayoutValid && key == textLayoutKey) return false
 
-        val direction = if (layoutDirection == View.LAYOUT_DIRECTION_RTL) {
-            TextDirectionHeuristics.FIRSTSTRONG_RTL
-        } else {
-            TextDirectionHeuristics.FIRSTSTRONG_LTR
-        }
         textLayout = FlowLayoutEngine.layout(
             text = text,
             paint = textPaint,
-            config = config.copy(textDirection = direction),
+            config = config.copy(alignment = resolveAlignment(), textDirection = resolveTextDirectionHeuristic()),
             left = paddingLeft,
             top = paddingTop,
             right = width - paddingRight,
@@ -327,6 +392,27 @@ public open class FlowTextView @JvmOverloads constructor(
         textLayoutKey = key
         textLayoutValid = true
         return true
+    }
+
+    /** Maps the view's `android:textAlignment` onto the layout alignment. */
+    private fun resolveAlignment(): Layout.Alignment = when (textAlignment) {
+        View.TEXT_ALIGNMENT_CENTER -> Layout.Alignment.ALIGN_CENTER
+        View.TEXT_ALIGNMENT_TEXT_END, View.TEXT_ALIGNMENT_VIEW_END -> Layout.Alignment.ALIGN_OPPOSITE
+        else -> Layout.Alignment.ALIGN_NORMAL
+    }
+
+    /** Maps the view's `android:textDirection` onto a heuristic, as TextView does. */
+    private fun resolveTextDirectionHeuristic(): TextDirectionHeuristic {
+        val rtlView = layoutDirection == View.LAYOUT_DIRECTION_RTL
+        return when (textDirection) {
+            View.TEXT_DIRECTION_ANY_RTL -> TextDirectionHeuristics.ANYRTL_LTR
+            View.TEXT_DIRECTION_LTR -> TextDirectionHeuristics.LTR
+            View.TEXT_DIRECTION_RTL -> TextDirectionHeuristics.RTL
+            View.TEXT_DIRECTION_LOCALE -> TextDirectionHeuristics.LOCALE
+            View.TEXT_DIRECTION_FIRST_STRONG_LTR -> TextDirectionHeuristics.FIRSTSTRONG_LTR
+            View.TEXT_DIRECTION_FIRST_STRONG_RTL -> TextDirectionHeuristics.FIRSTSTRONG_RTL
+            else -> if (rtlView) TextDirectionHeuristics.FIRSTSTRONG_RTL else TextDirectionHeuristics.FIRSTSTRONG_LTR
+        }
     }
 
     private fun collectObstacles(): List<Obstacle> {
@@ -375,12 +461,50 @@ public open class FlowTextView @JvmOverloads constructor(
     }
 
     private fun updateTextColor() {
-        val color = textColors.getColorForState(drawableState, textColors.defaultColor)
-        if (color != textPaint.color) {
+        val state = drawableState
+        val color = textColors.getColorForState(state, textColors.defaultColor)
+        val linkColor = linkTextColors.getColorForState(state, linkTextColors.defaultColor)
+        if (color != textPaint.color || linkColor != textPaint.linkColor) {
             textPaint.color = color
+            textPaint.linkColor = linkColor
             invalidate()
         }
     }
+
+    // region attributes
+
+    private fun readAttributes(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) {
+        val a = context.obtainStyledAttributes(attrs, R.styleable.FlowTextView, defStyleAttr, defStyleRes)
+        try {
+            // As in TextView, the text appearance supplies defaults that direct attributes override.
+            val appearanceRes = a.getResourceId(R.styleable.FlowTextView_android_textAppearance, 0)
+            val style = TextStyle()
+            if (appearanceRes != 0) {
+                val appearance = context.obtainStyledAttributes(appearanceRes, R.styleable.FlowTextViewAppearance)
+                try {
+                    style.read(context, appearance, APPEARANCE_INDICES)
+                } finally {
+                    appearance.recycle()
+                }
+            }
+            style.read(context, a, VIEW_INDICES)
+            style.applyTo(this)
+
+            config = config.copy(
+                lineSpacingExtra = a.getDimension(R.styleable.FlowTextView_android_lineSpacingExtra, config.lineSpacingExtra),
+                lineSpacingMultiplier = a.getFloat(R.styleable.FlowTextView_android_lineSpacingMultiplier, config.lineSpacingMultiplier),
+                includeFontPadding = a.getBoolean(R.styleable.FlowTextView_android_includeFontPadding, config.includeFontPadding),
+                breakStrategy = a.getInt(R.styleable.FlowTextView_android_breakStrategy, config.breakStrategy),
+                hyphenationFrequency = a.getInt(R.styleable.FlowTextView_android_hyphenationFrequency, config.hyphenationFrequency),
+                justificationMode = a.getInt(R.styleable.FlowTextView_android_justificationMode, config.justificationMode),
+            )
+            a.getText(R.styleable.FlowTextView_android_text)?.let { text = it }
+        } finally {
+            a.recycle()
+        }
+    }
+
+    // endregion
 
     private data class LayoutKey(
         val width: Int,
@@ -392,6 +516,7 @@ public open class FlowTextView @JvmOverloads constructor(
 
     private companion object {
         const val DEFAULT_TEXT_SIZE_SP = 20f
+        const val DEFAULT_LINK_COLOR = Color.BLUE
 
         const val FALLBACK_HIGHLIGHT_COLOR = 0x6633B5E5
 
