@@ -32,6 +32,7 @@ kotlin {
 
 dependencies {
     implementation(libs.androidx.core)
+    implementation(libs.androidx.customview)
 
     testImplementation(libs.junit)
     testImplementation(libs.truth)

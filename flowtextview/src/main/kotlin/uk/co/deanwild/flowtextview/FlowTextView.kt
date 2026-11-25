@@ -7,6 +7,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.Rect
 import android.graphics.Typeface
 import android.text.Layout
 import android.text.Spanned
@@ -17,13 +18,16 @@ import android.text.style.ClickableSpan
 import android.text.style.URLSpan
 import android.util.AttributeSet
 import android.util.TypedValue
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.widget.RelativeLayout
+import androidx.core.view.ViewCompat
 import uk.co.deanwild.flowtextview.internal.FlowLayoutConfig
 import uk.co.deanwild.flowtextview.internal.FlowLayoutEngine
 import uk.co.deanwild.flowtextview.internal.FlowLayoutResult
+import uk.co.deanwild.flowtextview.internal.LinkAccessibilityHelper
 import uk.co.deanwild.flowtextview.internal.Obstacle
 import uk.co.deanwild.flowtextview.listeners.OnLinkClickListener
 import kotlin.math.abs
@@ -77,6 +81,7 @@ public open class FlowTextView @JvmOverloads constructor(
         set(value) {
             field = value
             onTextLayoutInputsChanged()
+            if (initialised) accessibilityHelper.invalidateRoot()
         }
 
     /** The text size in pixels. Use [setTextSize] with a unit to set it in `sp` or `dp`. */
@@ -185,6 +190,7 @@ public open class FlowTextView @JvmOverloads constructor(
             if (pressedLink != null) invalidate()
         }
 
+    private val accessibilityHelper = LinkAccessibilityHelper(this)
     private val highlightPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val highlightPath = Path()
     private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
@@ -192,12 +198,16 @@ public open class FlowTextView @JvmOverloads constructor(
     private var downX = 0f
     private var downY = 0f
 
-    /** The current text layout. Visible for tests. */
+    /** The current text layout. Visible for tests and accessibility. */
     internal val currentTextLayout: FlowLayoutResult get() = textLayout
 
     init {
         // ViewGroups skip onDraw by default.
         setWillNotDraw(false)
+        ViewCompat.setAccessibilityDelegate(this, accessibilityHelper)
+        if (importantForAccessibility == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
+        }
         readAttributes(context, attrs, defStyleAttr, defStyleRes)
         highlightPaint.color = highlightColor
         initialised = true
@@ -355,6 +365,17 @@ public open class FlowTextView @JvmOverloads constructor(
         } else {
             span.onClick(this)
         }
+    }
+
+    override fun dispatchHoverEvent(event: MotionEvent): Boolean =
+        accessibilityHelper.dispatchHoverEvent(event) || super.dispatchHoverEvent(event)
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean =
+        accessibilityHelper.dispatchKeyEvent(event) || super.dispatchKeyEvent(event)
+
+    override fun onFocusChanged(gainFocus: Boolean, direction: Int, previouslyFocusedRect: Rect?) {
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect)
+        accessibilityHelper.onFocusChanged(gainFocus, direction, previouslyFocusedRect)
     }
 
     private fun setPressedLink(link: ClickableSpan?) {
