@@ -14,6 +14,7 @@ import android.text.Spanned
 import android.text.TextDirectionHeuristic
 import android.text.TextDirectionHeuristics
 import android.text.TextPaint
+import android.text.TextUtils
 import android.text.style.ClickableSpan
 import android.text.style.URLSpan
 import android.util.AttributeSet
@@ -172,6 +173,25 @@ public open class FlowTextView @JvmOverloads constructor(
     public var justificationMode: Int
         get() = config.justificationMode
         set(value) = updateConfig { it.copy(justificationMode = value) }
+
+    /**
+     * The most lines of text to show, counted across the whole flow around the children.
+     * Text beyond the last line is not drawn; see [ellipsize]. Defaults to no limit.
+     */
+    public var maxLines: Int
+        get() = config.maxLines
+        set(value) {
+            require(value >= 0) { "maxLines must not be negative: $value" }
+            updateConfig { it.copy(maxLines = value) }
+        }
+
+    /**
+     * How to show that text was cut off by [maxLines]. As in a multi-line `TextView`, only
+     * [TextUtils.TruncateAt.END] has an effect: the last line shown ends with an ellipsis.
+     */
+    public var ellipsize: TextUtils.TruncateAt?
+        get() = config.ellipsize
+        set(value) = updateConfig { it.copy(ellipsize = value) }
 
     /**
      * Notified with the URL when a [URLSpan] link is tapped, instead of the span opening it.
@@ -510,6 +530,14 @@ public open class FlowTextView @JvmOverloads constructor(
                 breakStrategy = a.getInt(R.styleable.FlowTextView_android_breakStrategy, config.breakStrategy),
                 hyphenationFrequency = a.getInt(R.styleable.FlowTextView_android_hyphenationFrequency, config.hyphenationFrequency),
                 justificationMode = a.getInt(R.styleable.FlowTextView_android_justificationMode, config.justificationMode),
+                maxLines = a.getInt(R.styleable.FlowTextView_android_maxLines, config.maxLines).coerceAtLeast(0),
+                ellipsize = when (a.getInt(R.styleable.FlowTextView_android_ellipsize, ELLIPSIZE_NONE)) {
+                    ELLIPSIZE_START -> TextUtils.TruncateAt.START
+                    ELLIPSIZE_MIDDLE -> TextUtils.TruncateAt.MIDDLE
+                    ELLIPSIZE_END -> TextUtils.TruncateAt.END
+                    ELLIPSIZE_MARQUEE -> TextUtils.TruncateAt.MARQUEE
+                    else -> config.ellipsize
+                },
             )
             a.getText(R.styleable.FlowTextView_android_text)?.let { text = it }
         } finally {
@@ -581,6 +609,13 @@ public open class FlowTextView @JvmOverloads constructor(
         const val DEFAULT_LINK_COLOR = Color.BLUE
 
         const val FALLBACK_HIGHLIGHT_COLOR = 0x6633B5E5
+
+        // Values of the android:ellipsize enum.
+        const val ELLIPSIZE_NONE = 0
+        const val ELLIPSIZE_START = 1
+        const val ELLIPSIZE_MIDDLE = 2
+        const val ELLIPSIZE_END = 3
+        const val ELLIPSIZE_MARQUEE = 4
 
         fun defaultHighlightColor(context: Context): Int {
             val a = context.obtainStyledAttributes(intArrayOf(android.R.attr.textColorHighlight))

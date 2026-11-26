@@ -5,6 +5,7 @@ import android.content.pm.ApplicationInfo
 import android.graphics.Typeface
 import android.graphics.text.LineBreaker
 import android.text.Layout
+import android.text.TextUtils
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View
@@ -157,5 +158,31 @@ class AttributesTest {
         assertThat(view.isLayoutRequested).isFalse()
         view.hyphenationFrequency = Layout.HYPHENATION_FREQUENCY_NORMAL
         assertThat(view.isLayoutRequested).isTrue()
+    }
+
+    @Test
+    fun readsMaxLinesAndEllipsize() {
+        val view = FlowTextView(context, attrs(android.R.attr.maxLines to "3", android.R.attr.ellipsize to "end"))
+        assertThat(view.maxLines).isEqualTo(3)
+        assertThat(view.ellipsize).isEqualTo(TextUtils.TruncateAt.END)
+
+        val defaults = FlowTextView(context)
+        assertThat(defaults.maxLines).isEqualTo(Int.MAX_VALUE)
+        assertThat(defaults.ellipsize).isNull()
+    }
+
+    @Test
+    fun maxLinesLimitsTheMeasuredHeight() {
+        fun measuredHeight(configure: FlowTextView.() -> Unit) = FlowTextView(context).apply {
+            text = "word ".repeat(200)
+            configure()
+            measure(MeasureSpec.makeMeasureSpec(600, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
+        }
+        val unlimited = measuredHeight {}
+        val limited = measuredHeight { maxLines = 2; ellipsize = TextUtils.TruncateAt.END }
+
+        assertThat(limited.currentTextLayout.segments.sumOf { it.lineCount }).isEqualTo(2)
+        assertThat(limited.measuredHeight).isEqualTo(limited.currentTextLayout.bottom + limited.paddingBottom)
+        assertThat(limited.measuredHeight).isLessThan(unlimited.measuredHeight)
     }
 }

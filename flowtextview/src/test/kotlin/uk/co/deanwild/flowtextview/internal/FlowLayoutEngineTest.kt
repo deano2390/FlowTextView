@@ -7,6 +7,7 @@ import android.text.TextDirectionHeuristics
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextPaint
+import android.text.TextUtils
 import android.text.style.RelativeSizeSpan
 import android.text.style.StyleSpan
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -277,7 +278,73 @@ class FlowLayoutEngineTest {
         result.assertCovers(paragraphs)
     }
 
+    @Test
+    fun maxLinesLimitsTheLinesAcrossSegments() {
+        val obstacle = Obstacle(0, 0, 200, 150)
+        val unlimited = layout(lorem, listOf(obstacle))
+        val limited = layout(lorem, listOf(obstacle), config = FlowLayoutConfig(maxLines = 7))
+
+        assertThat(limited.segments.size).isAtLeast(2)
+        assertThat(limited.segments.sumOf { it.lineCount }).isEqualTo(7)
+        assertThat(limited.bottom).isEqualTo(limited.segments.last().bottom)
+        assertThat(limited.lineStarts()).isEqualTo(unlimited.lineStarts().take(7))
+        assertThat(limited.ellipsisCounts().sum()).isEqualTo(0)
+    }
+
+    @Test
+    fun ellipsisEndsTheLastLineShown() {
+        val obstacle = Obstacle(0, 0, 200, 150)
+        val unlimited = layout(lorem, listOf(obstacle))
+        val result = layout(lorem, listOf(obstacle), config = FlowLayoutConfig(maxLines = 7, ellipsize = TextUtils.TruncateAt.END))
+
+        assertThat(result.lineStarts()).isEqualTo(unlimited.lineStarts().take(7))
+        val ellipses = result.ellipsisCounts()
+        assertThat(ellipses).hasSize(7)
+        assertThat(ellipses.last()).isGreaterThan(0)
+        assertThat(ellipses.dropLast(1).sum()).isEqualTo(0)
+        result.assertAvoids(obstacle)
+    }
+
+    @Test
+    fun ellipsisAppliesWhenTheLimitFallsAtTheEndOfASegment() {
+        val obstacle = Obstacle(0, 0, 200, 150)
+        val besideObstacle = layout(lorem, listOf(obstacle)).segments.first().lineCount
+        val result = layout(lorem, listOf(obstacle), config = FlowLayoutConfig(maxLines = besideObstacle, ellipsize = TextUtils.TruncateAt.END))
+
+        assertThat(result.segments).hasSize(1)
+        assertThat(result.ellipsisCounts().last()).isGreaterThan(0)
+    }
+
+    @Test
+    fun ellipsisAppliesWhenTheLimitFallsAtTheEndOfAParagraph() {
+        val text = "A short first paragraph.\nAnd a second one."
+        val result = layout(text, config = FlowLayoutConfig(maxLines = 1, ellipsize = TextUtils.TruncateAt.END))
+
+        assertThat(result.segments.single().lineCount).isEqualTo(1)
+        assertThat(result.ellipsisCounts().single()).isGreaterThan(0)
+    }
+
+    @Test
+    fun textThatFitsIsNotEllipsized() {
+        val result = layout("Just a few words", config = FlowLayoutConfig(maxLines = 2, ellipsize = TextUtils.TruncateAt.END))
+        assertThat(result.ellipsisCounts()).containsExactly(0)
+        result.assertCovers("Just a few words")
+    }
+
+    @Test
+    fun maxLinesOfZeroShowsNothing() {
+        val result = layout(lorem, top = 5, config = FlowLayoutConfig(maxLines = 0))
+        assertThat(result.segments).isEmpty()
+        assertThat(result.bottom).isEqualTo(5)
+    }
+
     // region helpers
+
+    private fun FlowLayoutResult.lineStarts(): List<Int> =
+        segments.flatMap { segment -> (0 until segment.lineCount).map { segment.layout.getLineStart(it) } }
+
+    private fun FlowLayoutResult.ellipsisCounts(): List<Int> =
+        segments.flatMap { segment -> (0 until segment.lineCount).map { segment.layout.getEllipsisCount(it) } }
 
     private data class DrawnLine(val top: Int, val bottom: Int, val left: Float, val right: Float) {
         fun intersectsBand(o: Obstacle) = top < o.bottom && bottom > o.top
