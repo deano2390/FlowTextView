@@ -154,11 +154,7 @@ public open class FlowTextView @JvmOverloads constructor(
         get() = config.includeFontPadding
         set(value) = updateConfig { it.copy(includeFontPadding = value) }
 
-    /**
-     * One of the `Layout.BREAK_STRATEGY_*` constants. Lines beside a child always use
-     * [Layout.BREAK_STRATEGY_SIMPLE], because the platform's other strategies do not honour the
-     * shortened line widths.
-     */
+    /** One of the `Layout.BREAK_STRATEGY_*` constants. */
     public var breakStrategy: Int
         get() = config.breakStrategy
         set(value) = updateConfig { it.copy(breakStrategy = value) }

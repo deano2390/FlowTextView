@@ -1,7 +1,9 @@
 package uk.co.deanwild.flowtextview.internal
 
 import android.graphics.Typeface
+import android.graphics.text.LineBreaker
 import android.text.Layout
+import android.text.TextDirectionHeuristics
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextPaint
@@ -178,8 +180,8 @@ class FlowLayoutEngineTest {
 
     @Test
     fun everyBreakStrategyAvoidsObstacles() {
-        // The optimal line breaker ignores per-line indents when choosing breaks; the engine must
-        // fall back to greedy breaking beside obstacles whatever strategy is configured.
+        // Regression: with per-line indents, Minikin's optimal breaker chose breaks for the full
+        // width and text overflowed into obstacles.
         val obstacles = listOf(Obstacle(0, 0, 220, 180), Obstacle(380, 100, 600, 300))
         listOf(Layout.BREAK_STRATEGY_SIMPLE, Layout.BREAK_STRATEGY_HIGH_QUALITY, Layout.BREAK_STRATEGY_BALANCED)
             .forEach { strategy ->
@@ -190,7 +192,7 @@ class FlowLayoutEngineTest {
     }
 
     @Test
-    fun textBelowObstaclesIsLaidOutWithTheConfiguredStrategy() {
+    fun textBesideAndBelowAnObstacleAreSeparateSegments() {
         val result = layout(lorem, listOf(Obstacle(0, 0, 200, 100)))
 
         assertThat(result.segments).hasSize(2)
@@ -233,6 +235,48 @@ class FlowLayoutEngineTest {
         result.assertCovers(hebrew)
     }
 
+    @Test
+    fun justifiedTextAvoidsObstaclesInBothDirections() {
+        val hebrew = "שלום עולם זהו טקסט לדוגמה שזורם סביב תמונות ".repeat(12)
+        val obstacles = listOf(Obstacle(0, 0, 200, 150), Obstacle(420, 200, 600, 360))
+        listOf(lorem to TextDirectionHeuristics.FIRSTSTRONG_LTR, hebrew to TextDirectionHeuristics.FIRSTSTRONG_RTL)
+            .forEach { (text, direction) ->
+                val config = FlowLayoutConfig(justificationMode = LineBreaker.JUSTIFICATION_MODE_INTER_WORD, textDirection = direction)
+                val result = layout(text, obstacles, config = config)
+                // Character bounds ignore justification (and the spaces it may shrink), so check
+                // that each segment's box, which justified lines fill exactly, avoids the obstacles.
+                obstacles.forEach { result.assertBoxesAvoid(it) }
+                result.assertCovers(text)
+            }
+    }
+
+    @Test
+    fun segmentsResumingMidParagraphKeepTheParagraphsDirection() {
+        val text = "שלום עולם FlowTextView\nEnglish paragraph"
+        val resume = text.indexOf("FlowTextView")
+
+        val choice = FlowLayoutEngine.DirectionChoice.at(text, resume, TextDirectionHeuristics.FIRSTSTRONG_LTR)
+        assertThat(choice.heuristic).isEqualTo(TextDirectionHeuristics.RTL)
+        assertThat(choice.paragraphEnd).isEqualTo(text.indexOf('\n'))
+
+        val atParagraphStart = FlowLayoutEngine.DirectionChoice.at(text, text.indexOf("English"), TextDirectionHeuristics.FIRSTSTRONG_LTR)
+        assertThat(atParagraphStart.heuristic).isEqualTo(TextDirectionHeuristics.FIRSTSTRONG_LTR)
+        assertThat(atParagraphStart.paragraphEnd).isEqualTo(-1)
+
+        val sameDirection = FlowLayoutEngine.DirectionChoice.at(text, text.indexOf("עולם"), TextDirectionHeuristics.FIRSTSTRONG_LTR)
+        assertThat(sameDirection.heuristic).isEqualTo(TextDirectionHeuristics.FIRSTSTRONG_LTR)
+    }
+
+    @Test
+    fun segmentsBesideObstaclesOnlyLayOutTheTextTheyNeed() {
+        val paragraphs = (1..300).joinToString("\n") { "Paragraph $it. $lorem" }
+        val result = layout(paragraphs, listOf(Obstacle(0, 0, 200, 150)))
+
+        val beside = result.segments.first()
+        assertThat(beside.layout.getLineEnd(beside.layout.lineCount - 1)).isLessThan(paragraphs.length / 10)
+        result.assertCovers(paragraphs)
+    }
+
     // region helpers
 
     private data class DrawnLine(val top: Int, val bottom: Int, val left: Float, val right: Float) {
@@ -262,7 +306,22 @@ class FlowLayoutEngineTest {
         }
     }
 
+    /** Asserts no segment's box (its width across the band of its lines) overlaps [obstacle]. */
+    private fun FlowLayoutResult.assertBoxesAvoid(obstacle: Obstacle) {
+        segments.forEach { segment ->
+            val boxRight = segment.left + segment.layout.width
+            for (line in 0 until segment.lineCount) {
+                val top = segment.top + segment.layout.getLineTop(line)
+                val bottom = segment.top + segment.layout.getLineBottom(line)
+                val overlaps = top < obstacle.bottom && bottom > obstacle.top &&
+                    segment.left < obstacle.right && boxRight > obstacle.left
+                assertWithMessage("segment at (${segment.left}, $top) width ${segment.layout.width} overlaps $obstacle").that(overlaps).isFalse()
+            }
+        }
+    }
+
     private fun FlowLayoutResult.assertAvoids(obstacle: Obstacle) {
+        assertBoxesAvoid(obstacle)
         lines().filter { it.intersectsBand(obstacle) }.forEach { line ->
             val overlaps = line.left < obstacle.right - 1 && line.right > obstacle.left + 1
             assertWithMessage("line $line overlaps $obstacle").that(overlaps).isFalse()

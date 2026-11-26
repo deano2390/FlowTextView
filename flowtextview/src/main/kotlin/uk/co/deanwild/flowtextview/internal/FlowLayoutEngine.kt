@@ -9,6 +9,7 @@ import android.text.StaticLayout
 import android.text.TextDirectionHeuristic
 import android.text.TextDirectionHeuristics
 import android.text.TextPaint
+import android.text.TextUtils
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -27,15 +28,17 @@ internal data class FlowLayoutConfig(
 )
 
 /**
- * A run of consecutive lines laid out by one [StaticLayout], drawn with its top-left corner at
- * ([left], [top]) in view coordinates. Only the first [lineCount] lines of [layout] belong to this
- * segment; any further lines ran into a fully blocked band and are re-laid-out by the next segment.
+ * A run of consecutive lines that share the same horizontal space, laid out by one [StaticLayout]
+ * whose width is that space and drawn with its top-left corner at ([left], [top]) in view
+ * coordinates. Only the first [lineCount] lines of [layout] belong to this segment; the text after
+ * them is laid out again by the next segment, in the space available there.
  */
 internal class FlowSegment(
     val layout: StaticLayout,
     val left: Int,
     val top: Int,
     val lineCount: Int,
+    private val justified: Boolean,
 ) {
     /** Offset in the source text of the first character in this segment. */
     val start: Int get() = layout.getLineStart(0)
@@ -75,13 +78,13 @@ internal class FlowSegment(
         while (end > start && text[end - 1].isWhitespace()) end--
         if (end == start) return -1
 
-        // getLineLeft()/getLineRight() ignore per-line indents, so derive the extent of the text
-        // from where its first character is drawn and its width.
+        // Justified lines are stretched to the full width, but getLineLeft()/getLineRight()
+        // report their natural extent.
         val lx = x - left
         val rtl = layout.getParagraphDirection(line) == Layout.DIR_RIGHT_TO_LEFT
-        val origin = layout.getPrimaryHorizontal(start)
-        val extent = layout.getLineMax(line)
-        val (lo, hi) = if (rtl) (origin - extent) to origin else origin to (origin + extent)
+        val stretched = justified && layout.getLineEnd(line) < text.length && text[layout.getLineEnd(line) - 1] != '\n'
+        val lo = if (stretched) 0f else layout.getLineLeft(line)
+        val hi = if (stretched) layout.width.toFloat() else layout.getLineRight(line)
         if (lx < lo || lx > hi) return -1
 
         // getOffsetForHorizontal() returns the nearest caret position; pick the character on the
@@ -120,14 +123,16 @@ internal class FlowLayoutResult(val segments: List<FlowSegment>, val bottom: Int
  * Lays text out around rectangular obstacles.
  *
  * Line breaking, styling, bidi, hyphenation and justification are all delegated to [StaticLayout].
- * The engine's job is to tell it, line by line, how much horizontal space is free, which it does
- * with per-line indents ([StaticLayout.Builder.setIndents]). Indents are first estimated from the
- * nominal line height, then refined from the real line positions until they agree, so lines of
- * mixed height (e.g. with a `RelativeSizeSpan`) still avoid obstacles.
+ * The text is divided into segments: runs of consecutive lines that have the same free horizontal
+ * space beside the obstacles. Each segment is a [StaticLayout] exactly as wide as that space, so
+ * every platform feature behaves as it does in a TextView of that width.
  *
- * A band that has no usable gap at all, such as one crossed by a full-width child, cannot be
- * expressed as an indent. When the text reaches one, the current [StaticLayout] is cut short and a
- * new segment continues below the obstacle.
+ * Per-line indents ([StaticLayout.Builder.setIndents]) would avoid the extra layouts but are not
+ * usable: Minikin's optimal line breaker ignores them when choosing breaks, and justification only
+ * accounts for the indent on the leading side, so text overflows into obstacles on the other.
+ *
+ * Segment heights are not known until laid out, so a segment's line count is decided from the
+ * real line positions. Bands with no usable gap (e.g. beside a full-width child) are skipped.
  */
 internal object FlowLayoutEngine {
 
@@ -143,8 +148,7 @@ internal object FlowLayoutEngine {
         right: Int,
         obstacles: List<Obstacle>,
     ): FlowLayoutResult {
-        val width = right - left
-        if (text.isEmpty() || width <= 0) return FlowLayoutResult.empty(top)
+        if (text.isEmpty() || right - left <= 0) return FlowLayoutResult.empty(top)
 
         val context = Context(text, paint, config, left, right, obstacles)
         val segments = ArrayList<FlowSegment>()
@@ -153,61 +157,18 @@ internal object FlowLayoutEngine {
         var steps = 0
 
         while (start < text.length && steps++ < MAX_STEPS) {
-            val firstBand = context.freeSpan(y, y + context.nominalLineHeight)
-            if (firstBand == null) {
-                y = context.skipBlockedBand(y, y + context.nominalLineHeight)
+            val segment = context.buildSegment(start, y)
+            if (segment == null) {
+                y = context.skipBlockedBand(y)
                 continue
             }
-
-            val built = context.buildSegment(start, y)
-            if (built.keep == 0) {
-                // The first line turned out taller than estimated and hits a blocked band.
-                val lineBottom = y + built.layout.getLineBottom(0)
-                y = context.skipBlockedBand(y, lineBottom)
-                continue
-            }
-
-            val segment = FlowSegment(built.layout, left, y, built.keep)
             segments += segment
             y = segment.bottom
-            start = if (built.keep < built.layout.lineCount) segment.end else text.length
+            start = segment.end
         }
 
         return FlowLayoutResult(segments, y)
     }
-
-    /**
-     * Per-line indents for one segment.
-     *
-     * @property blockedAt index of the first line whose band is fully blocked, or -1.
-     * @property clearFrom index of the first line below every obstacle, or -1 if not reached.
-     */
-    private class IndentPlan(val left: IntArray, val right: IntArray, val blockedAt: Int, val clearFrom: Int) {
-        /** True if any line is narrowed by an obstacle. */
-        val indented: Boolean = left.any { it != 0 } || right.any { it != 0 }
-
-        /**
-         * Index of the line at which this segment must end, or -1 if it may run to the end of the
-         * text. An indented segment also ends once the obstacles are passed, so the remaining text
-         * can be laid out with the caller's break strategy (see [Context.build]).
-         */
-        private val cutAt: Int = when {
-            blockedAt >= 0 -> blockedAt
-            indented -> clearFrom
-            else -> -1
-        }
-
-        /** Number of lines of a layout with [lineCount] lines that belong to this segment. */
-        fun usableLines(lineCount: Int): Int = if (cutAt < 0) lineCount else minOf(lineCount, cutAt)
-
-        fun sameIndents(other: IndentPlan, lines: Int): Boolean =
-            (0 until lines).all { left.at(it) == other.left.at(it) && right.at(it) == other.right.at(it) }
-
-        // StaticLayout repeats the last indent for every line past the end of the array.
-        private fun IntArray.at(i: Int) = if (isEmpty()) 0 else this[minOf(i, size - 1)]
-    }
-
-    private class BuiltSegment(val layout: StaticLayout, val keep: Int)
 
     private class Context(
         val text: CharSequence,
@@ -217,8 +178,8 @@ internal object FlowLayoutEngine {
         val right: Int,
         val obstacles: List<Obstacle>,
     ) {
-        val width = right - left
-        val nominalLineHeight: Int = max(
+        private val width = right - left
+        private val nominalLineHeight: Int = max(
             1,
             (paint.getFontMetricsInt(null) * config.lineSpacingMultiplier + config.lineSpacingExtra).roundToInt(),
         )
@@ -227,94 +188,117 @@ internal object FlowLayoutEngine {
         private val minLineWidth: Int = ceil(paint.textSize).toInt().let { em -> if (width >= em) max(em, 1) else 1 }
         private val lowestObstacleBottom: Int = obstacles.maxOfOrNull { it.bottom } ?: Int.MIN_VALUE
 
-        fun freeSpan(bandTop: Int, bandBottom: Int): FreeSpan? =
+        /** A rough upper bound on the characters in one line, used to size layout chunks. */
+        private val maxCharsPerLine: Int = max(16, (width / max(1f, paint.textSize * 0.2f)).toInt())
+
+        private fun freeSpan(bandTop: Int, bandBottom: Int): FreeSpan? =
             FlowGeometry.freeSpan(left, right, bandTop, bandBottom, obstacles, minLineWidth)
 
-        fun skipBlockedBand(bandTop: Int, bandBottom: Int): Int {
-            val next = FlowGeometry.nextObstacleBottom(bandTop, bandBottom, obstacles)
-            return if (next != null && next > bandTop) next else bandTop + nominalLineHeight
-        }
-
-        fun buildSegment(start: Int, y: Int): BuiltSegment {
-            var plan = plan { i -> estimatedBand(y, i) }
-            var layout = build(start, plan)
-            repeat(MAX_REFINEMENTS) {
-                val current = layout
-                val keep = plan.usableLines(current.lineCount)
-                val actual = plan { i -> actualBand(current, y, i) }
-                if (actual.usableLines(current.lineCount) == keep && plan.sameIndents(actual, keep)) {
-                    return BuiltSegment(current, keep)
-                }
-                plan = actual
-                layout = build(start, plan)
-            }
-            // Did not converge (pathological oscillation): keep only lines both plans agree are usable.
-            val final = layout
-            val actual = plan { i -> actualBand(final, y, i) }
-            return BuiltSegment(final, minOf(plan.usableLines(final.lineCount), actual.usableLines(final.lineCount)))
-        }
-
-        private fun estimatedBand(y: Int, line: Int): Pair<Int, Int> {
-            val top = y + line * nominalLineHeight
-            return top to top + nominalLineHeight
-        }
-
-        private fun actualBand(layout: StaticLayout, y: Int, line: Int): Pair<Int, Int> {
-            if (line < layout.lineCount) return (y + layout.getLineTop(line)) to (y + layout.getLineBottom(line))
-            val top = y + layout.getLineBottom(layout.lineCount - 1) + (line - layout.lineCount) * nominalLineHeight
-            return top to top + nominalLineHeight
-        }
-
-        /** Computes indents line by line until the obstacles are passed or a band is fully blocked. */
-        private inline fun plan(band: (Int) -> Pair<Int, Int>): IndentPlan {
-            val lefts = ArrayList<Int>()
-            val rights = ArrayList<Int>()
-            var line = 0
-            var blockedAt = -1
-            var clearFrom = -1
-            while (true) {
-                val (bandTop, bandBottom) = band(line)
-                if (bandTop >= lowestObstacleBottom) {
-                    // StaticLayout repeats the last indent, so one zero covers all remaining lines.
-                    lefts += 0
-                    rights += 0
-                    clearFrom = line
-                    break
-                }
-                val span = freeSpan(bandTop, bandBottom)
-                if (span == null) {
-                    blockedAt = line
-                    break
-                }
-                lefts += span.start - left
-                rights += right - span.end
-                line++
-            }
-            return IndentPlan(lefts.toIntArray(), rights.toIntArray(), blockedAt, clearFrom)
+        /** Moves [y] past whatever blocks a line starting there. */
+        fun skipBlockedBand(y: Int): Int {
+            val next = FlowGeometry.nextObstacleBottom(y, y + nominalLineHeight, obstacles)
+            return if (next != null && next > y) next else y + nominalLineHeight
         }
 
         /**
-         * Minikin's optimal line breaker (BREAK_STRATEGY_HIGH_QUALITY and BALANCED) picks breaks as if
-         * every line had the first line's width, then applies the indents only when positioning, so
-         * text overflows into obstacles. The greedy SIMPLE breaker honours per-line indents, so it
-         * is used for lines beside obstacles; text below them gets the configured strategy.
+         * Lays out the text from [start] in the space free at [y], keeping the lines that fit in that
+         * same space. Returns null if no line fits at [y].
          */
-        private fun build(start: Int, plan: IndentPlan): StaticLayout {
-            val breakStrategy = if (plan.indented) Layout.BREAK_STRATEGY_SIMPLE else config.breakStrategy
-            val builder = StaticLayout.Builder.obtain(text, start, text.length, paint, width)
+        fun buildSegment(start: Int, y: Int): FlowSegment? {
+            val direction = DirectionChoice.at(text, start, config.textDirection)
+            var span = freeSpan(y, y + nominalLineHeight) ?: return null
+
+            repeat(MAX_REFINEMENTS) {
+                val layout = build(start, span, direction, y)
+                // The first line may be taller than estimated and reach a narrower band.
+                val firstLineSpan = freeSpan(y, y + layout.getLineBottom(0)) ?: return null
+                if (firstLineSpan == span) return segmentOf(layout, span, y, direction)
+                span = firstLineSpan
+            }
+            return segmentOf(build(start, span, direction, y), span, y, direction)
+        }
+
+        private fun segmentOf(layout: StaticLayout, span: FreeSpan, y: Int, direction: DirectionChoice): FlowSegment? {
+            // Keep lines while the free space beside them stays the same. Once the obstacles are
+            // passed it can no longer change, so the rest of the layout is kept.
+            var keep = 0
+            while (keep < layout.lineCount) {
+                val top = y + layout.getLineTop(keep)
+                if (top >= lowestObstacleBottom && span.start == left && span.end == right) {
+                    keep = layout.lineCount
+                    break
+                }
+                if (freeSpan(top, y + layout.getLineBottom(keep)) != span) break
+                keep++
+            }
+            if (direction.paragraphEnd >= 0) {
+                keep = minOf(keep, layout.getLineForOffset(direction.paragraphEnd) + 1)
+            }
+            if (keep == 0) return null
+            return FlowSegment(layout, span.start, y, keep, justified = config.justificationMode != 0)
+        }
+
+        /**
+         * Builds a layout of the text from [start] in [span]. Only as much text is laid out as the
+         * segment can use, rounded up to whole paragraphs so line breaks are unaffected.
+         */
+        private fun build(start: Int, span: FreeSpan, direction: DirectionChoice, y: Int): StaticLayout {
+            val linesBeside = if (lowestObstacleBottom <= y) Int.MAX_VALUE else (lowestObstacleBottom - y) / nominalLineHeight + 2
+            var chunk = if (linesBeside == Int.MAX_VALUE) Int.MAX_VALUE else linesBeside.toLong().times(maxCharsPerLine).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+            while (true) {
+                val end = paragraphEndAfter(start, chunk)
+                val layout = build(start, end, span.width, direction.heuristic)
+                // If every line of a truncated chunk fits beside the obstacles, the chunk was too
+                // short to know where the segment ends; lay out more.
+                val lastTop = y + layout.getLineTop(layout.lineCount - 1)
+                if (end >= text.length || lastTop >= lowestObstacleBottom) return layout
+                chunk = if (chunk > Int.MAX_VALUE / 2) Int.MAX_VALUE else chunk * 2
+            }
+        }
+
+        /** The end of the paragraph containing `start + chunk`, or the end of the text. */
+        private fun paragraphEndAfter(start: Int, chunk: Int): Int {
+            if (chunk >= text.length - start) return text.length
+            val newline = TextUtils.indexOf(text, '\n', start + chunk)
+            return if (newline < 0) text.length else newline + 1
+        }
+
+        private fun build(start: Int, end: Int, width: Int, heuristic: TextDirectionHeuristic): StaticLayout {
+            val builder = StaticLayout.Builder.obtain(text, start, end, paint, width)
                 .setAlignment(config.alignment)
-                .setTextDirection(config.textDirection)
+                .setTextDirection(heuristic)
                 .setLineSpacing(config.lineSpacingExtra, config.lineSpacingMultiplier)
                 // Font padding belongs above the first line of the text only; a segment that
                 // continues the text must not add it again, or the line pitch jumps.
                 .setIncludePad(config.includeFontPadding && start == 0)
-                .setBreakStrategy(breakStrategy)
+                .setBreakStrategy(config.breakStrategy)
                 .setHyphenationFrequency(config.hyphenationFrequency)
-            if (plan.left.isNotEmpty()) builder.setIndents(plan.left, plan.right)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 builder.setJustificationMode(config.justificationMode)
             }
             return builder.build()
+        }
+    }
+
+    /**
+     * The direction to lay out a segment in. StaticLayout treats the start of its text as the start
+     * of a paragraph, so a segment that resumes mid-paragraph could guess a different direction
+     * from the paragraph's own (e.g. an RTL paragraph continuing with a Latin word). In that case
+     * the paragraph's direction is forced, and the segment ends with that paragraph.
+     */
+    internal class DirectionChoice(val heuristic: TextDirectionHeuristic, val paragraphEnd: Int) {
+        companion object {
+            fun at(text: CharSequence, start: Int, heuristic: TextDirectionHeuristic): DirectionChoice {
+                if (start == 0 || text[start - 1] == '\n') return DirectionChoice(heuristic, -1)
+                val paragraphStart = TextUtils.lastIndexOf(text, '\n', start - 1) + 1
+                val newline = TextUtils.indexOf(text, '\n', start)
+                val paragraphEnd = if (newline < 0) text.length else newline
+                val paragraphRtl = heuristic.isRtl(text, paragraphStart, paragraphEnd - paragraphStart)
+                val restRtl = heuristic.isRtl(text, start, paragraphEnd - start)
+                if (paragraphRtl == restRtl) return DirectionChoice(heuristic, -1)
+                val forced = if (paragraphRtl) TextDirectionHeuristics.RTL else TextDirectionHeuristics.LTR
+                return DirectionChoice(forced, if (newline < 0) -1 else newline)
+            }
         }
     }
 }
