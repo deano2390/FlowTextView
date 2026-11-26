@@ -7,6 +7,7 @@
     <string name="font_smaller_description">Decrease text size</string>
     <string name="font_larger_description">Increase text size</string>
     <string name="justify">Justify</string>
+    <string name="max_lines">12 lines</string>
     <string name="images">Images</string>
     <string name="right_to_left">Right to left</string>
     <string name="link_clicked">Opening %1$s</string>

@@ -3,6 +3,7 @@ package uk.co.deanwild.flowtextview.sample
 import android.os.Build
 import android.os.Bundle
 import android.text.Spanned
+import android.text.TextUtils
 import android.util.TypedValue
 import android.view.View
 import android.widget.Toast
@@ -29,6 +30,7 @@ class MainActivity : AppCompatActivity() {
 
         val flowTextView = binding.flowTextView
         flowTextView.text = latinText()
+        flowTextView.ellipsize = TextUtils.TruncateAt.END
         flowTextView.onLinkClickListener = OnLinkClickListener { url ->
             Toast.makeText(this, getString(R.string.link_clicked, url), Toast.LENGTH_SHORT).show()
         }
@@ -40,6 +42,11 @@ class MainActivity : AppCompatActivity() {
         binding.justify.isVisible = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
         binding.justify.setOnCheckedChangeListener { _, checked ->
             flowTextView.justificationMode = if (checked) JUSTIFICATION_MODE_INTER_WORD else JUSTIFICATION_MODE_NONE
+        }
+
+        // Lines are counted across the whole flow, beside and below the images.
+        binding.maxLines.setOnCheckedChangeListener { _, checked ->
+            flowTextView.maxLines = if (checked) MAX_LINES else Int.MAX_VALUE
         }
 
         // Hiding a child reflows the text into the space it occupied.
@@ -79,5 +86,7 @@ class MainActivity : AppCompatActivity() {
         // LineBreaker.JUSTIFICATION_MODE_* (API 29) share their values with the API 26 Layout constants.
         const val JUSTIFICATION_MODE_NONE = 0
         const val JUSTIFICATION_MODE_INTER_WORD = 1
+
+        const val MAX_LINES = 12
     }
 }
