@@ -199,6 +199,24 @@ class FlowLayoutEngineTest {
     }
 
     @Test
+    fun linePitchIsEvenAcrossSegmentBoundaries() {
+        listOf(true, false).forEach { includePad ->
+            listOf(1f, 1.15f).forEach { mult ->
+                val config = FlowLayoutConfig(includeFontPadding = includePad, lineSpacingMultiplier = mult)
+                val result = layout(lorem, listOf(Obstacle(0, 0, 200, 100), Obstacle(400, 300, 600, 420)), config = config)
+                assertThat(result.segments.size).isAtLeast(2)
+
+                val baselines = result.segments.flatMap { segment ->
+                    (0 until segment.lineCount).map { segment.top + segment.layout.getLineBaseline(it) }
+                }
+                val pitches = baselines.zipWithNext { a, b -> b - a }.distinct()
+                assertWithMessage("includePad=$includePad mult=$mult pitches=$pitches")
+                    .that(pitches.max() - pitches.min()).isAtMost(1)
+            }
+        }
+    }
+
+    @Test
     fun lineSpacingIncreasesHeight() {
         val normal = layout(lorem).bottom
         val spaced = layout(lorem, config = FlowLayoutConfig(lineSpacingMultiplier = 1.5f)).bottom

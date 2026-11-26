@@ -305,7 +305,9 @@ internal object FlowLayoutEngine {
                 .setAlignment(config.alignment)
                 .setTextDirection(config.textDirection)
                 .setLineSpacing(config.lineSpacingExtra, config.lineSpacingMultiplier)
-                .setIncludePad(config.includeFontPadding)
+                // Font padding belongs above the first line of the text only; a segment that
+                // continues the text must not add it again, or the line pitch jumps.
+                .setIncludePad(config.includeFontPadding && start == 0)
                 .setBreakStrategy(breakStrategy)
                 .setHyphenationFrequency(config.hyphenationFrequency)
             if (plan.left.isNotEmpty()) builder.setIndents(plan.left, plan.right)
