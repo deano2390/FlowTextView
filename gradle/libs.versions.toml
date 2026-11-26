@@ -6,6 +6,8 @@ minSdk = "23"
 appcompat = "1.8.0"
 core = "1.19.1"
 customview = "1.2.0"
+activity = "1.13.0"
+material = "1.14.0"
 junit = "4.13.2"
 robolectric = "4.18.1"
 truth = "1.4.5"
@@ -14,6 +16,8 @@ androidx-test-junit = "1.3.0"
 
 [libraries]
 androidx-customview = { module = "androidx.customview:customview", version.ref = "customview" }
+androidx-activity = { module = "androidx.activity:activity-ktx", version.ref = "activity" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
 androidx-core = { module = "androidx.core:core-ktx", version.ref = "core" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 

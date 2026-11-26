@@ -21,6 +21,10 @@ android {
         }
     }
 
+    buildFeatures {
+        viewBinding = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -29,5 +33,8 @@ android {
 
 dependencies {
     implementation(projects.flowtextview)
+    implementation(libs.androidx.activity)
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.core)
+    implementation(libs.material)
 }
