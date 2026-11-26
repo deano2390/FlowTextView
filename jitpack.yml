@@ -1,0 +1,5 @@
+# JitPack builds the library from a tag: https://jitpack.io/#deano2390/FlowTextView
+jdk:
+  - openjdk17
+install:
+  - ./gradlew :flowtextview:publishReleasePublicationToMavenLocal

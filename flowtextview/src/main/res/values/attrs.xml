@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Theme attribute for the default FlowTextView style. -->
+    <attr name="flowTextViewStyle" format="reference" />
+
+    <declare-styleable name="FlowTextView">
+        <attr name="android:text" />
+        <attr name="android:textAppearance" />
+        <attr name="android:textSize" />
+        <attr name="android:textColor" />
+        <attr name="android:textColorLink" />
+        <attr name="android:textColorHighlight" />
+        <attr name="android:fontFamily" />
+        <attr name="android:textStyle" />
+        <attr name="android:letterSpacing" />
+        <attr name="android:lineSpacingExtra" />
+        <attr name="android:lineSpacingMultiplier" />
+        <attr name="android:includeFontPadding" />
+        <attr name="android:breakStrategy" />
+        <attr name="android:hyphenationFrequency" />
+        <attr name="android:justificationMode" />
+    </declare-styleable>
+
+    <!-- The subset of attributes read from android:textAppearance, as for TextView. -->
+    <declare-styleable name="FlowTextViewAppearance">
+        <attr name="android:textSize" />
+        <attr name="android:textColor" />
+        <attr name="android:textColorLink" />
+        <attr name="android:textColorHighlight" />
+        <attr name="android:fontFamily" />
+        <attr name="android:textStyle" />
+        <attr name="android:letterSpacing" />
+    </declare-styleable>
+</resources>
