@@ -21,6 +21,7 @@ Features
   italic, colour, size, underline, images…).
 - Clickable links and any `ClickableSpan`, with a pressed highlight.
 - Right-to-left scripts, justification, hyphenation and line break strategies.
+- A maximum number of lines, with an ellipsis at the end of the last one.
 - The `TextView` XML attributes you would expect, including `android:textAppearance`, and theme
   defaults that follow light and dark mode.
 - Accessible: TalkBack reads the text, and links can be reached and activated by touch exploration,
@@ -46,7 +47,7 @@ Then add the dependency:
 
 ```kotlin
 dependencies {
-    implementation("com.github.deano2390:FlowTextView:3.0.0")
+    implementation("com.github.deano2390:FlowTextView:3.1.0")
 }
 ```
 
@@ -127,6 +128,7 @@ listener.
 | `android:fontFamily`, `android:textStyle`, `android:letterSpacing` | `fontFamily` accepts `@font` resources and family names. |
 | `android:lineSpacingExtra`, `android:lineSpacingMultiplier`, `android:includeFontPadding` | |
 | `android:breakStrategy`, `android:hyphenationFrequency`, `android:justificationMode` | Justification requires API 26. |
+| `android:maxLines`, `android:ellipsize` | Lines are counted across the whole flow. Only `end` ellipsizes, as in a multi-line `TextView`. |
 | `android:textAlignment`, `android:textDirection` | Standard `View` attributes. `android:gravity` still positions children, as in any `RelativeLayout`. |
 
 A default style can be set for the whole app with the `flowTextViewStyle` theme attribute.
