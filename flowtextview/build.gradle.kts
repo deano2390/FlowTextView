@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.library)
+    alias(libs.plugins.roborazzi)
 }
 
 android {
@@ -23,6 +24,12 @@ android {
     }
 }
 
+roborazzi {
+    // Golden images are committed; `./gradlew verifyRoborazziDebug` compares against them and
+    // `./gradlew recordRoborazziDebug` re-records after an intentional visual change.
+    outputDir.set(file("src/test/screenshots"))
+}
+
 kotlin {
     explicitApi()
     compilerOptions {
@@ -37,6 +44,7 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.truth)
     testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.androidx.test.junit)
 }
