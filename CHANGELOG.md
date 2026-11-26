@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.1.0
+
+### Added
+
+- `maxLines` and `ellipsize`, also as the `android:maxLines` and `android:ellipsize` attributes.
+  Lines are counted across the whole flow, beside and below the children, and with
+  `TruncateAt.END` the last line shown ends with an ellipsis. As in a multi-line `TextView`, the
+  other `TruncateAt` values have no effect.
+
 ## 3.0.0
 
 A rewrite in Kotlin on top of the platform's `StaticLayout`. The view still extends

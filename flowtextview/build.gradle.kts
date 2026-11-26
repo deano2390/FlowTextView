@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.github.deano2390"
-version = "3.0.0"
+version = "3.1.0"
 
 android {
     namespace = "uk.co.deanwild.flowtextview"

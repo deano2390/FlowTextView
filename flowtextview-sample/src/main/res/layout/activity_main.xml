@@ -93,6 +93,14 @@
                 android:text="@string/justify" />
 
             <com.google.android.material.chip.Chip
+                android:id="@+id/maxLines"
+                style="@style/Widget.Material3.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/max_lines" />
+
+            <com.google.android.material.chip.Chip
                 android:id="@+id/images"
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"

@@ -27,6 +27,10 @@ internal data class FlowLayoutConfig(
     /** One of `LineBreaker.JUSTIFICATION_MODE_*`; ignored before API 26. */
     val justificationMode: Int = 0,
     val textDirection: TextDirectionHeuristic = TextDirectionHeuristics.FIRSTSTRONG_LTR,
+    /** The most lines to show, across all segments. */
+    val maxLines: Int = Int.MAX_VALUE,
+    /** Only [TextUtils.TruncateAt.END] has an effect, as in a multi-line TextView. */
+    val ellipsize: TextUtils.TruncateAt? = null,
 )
 
 /**
@@ -149,21 +153,25 @@ internal object FlowLayoutEngine {
         right: Int,
         obstacles: List<Obstacle>,
     ): FlowLayoutResult {
-        if (text.isEmpty() || right - left <= 0) return FlowLayoutResult.empty(top)
+        if (text.isEmpty() || right - left <= 0 || config.maxLines <= 0) return FlowLayoutResult.empty(top)
 
         val context = Context(text, paint, config, left, right, obstacles)
         val segments = ArrayList<FlowSegment>()
         var start = 0
         var y = top
+        var lines = 0
         var steps = 0
 
-        while (start < text.length && steps++ < MAX_STEPS) {
-            val segment = context.buildSegment(start, y)
+        while (start < text.length && lines < config.maxLines && steps++ < MAX_STEPS) {
+            var segment = context.buildSegment(start, y)
             if (segment == null) {
                 y = context.skipBlockedBand(y)
                 continue
             }
+            val remaining = config.maxLines - lines
+            if (segment.lineCount >= remaining) segment = context.lastSegment(segment, remaining)
             segments += segment
+            lines += segment.lineCount
             y = segment.bottom
             start = segment.end
         }
@@ -240,6 +248,24 @@ internal object FlowLayoutEngine {
         }
 
         /**
+         * Cuts [segment] down to its first [lines] lines, the last lines shown. If text is left over
+         * and [FlowLayoutConfig.ellipsize] is END, the segment is laid out again with the last
+         * line ellipsized.
+         */
+        fun lastSegment(segment: FlowSegment, lines: Int): FlowSegment {
+            val justified = config.justificationMode != 0
+            val end = segment.layout.getLineEnd(lines - 1)
+            if (config.ellipsize != TextUtils.TruncateAt.END || end >= text.length) {
+                return FlowSegment(segment.layout, segment.left, segment.top, lines, justified)
+            }
+            // Extending the layout to the end of the next paragraph leaves the existing line
+            // breaks unchanged and tells StaticLayout that more text follows the last line.
+            val heuristic = DirectionChoice.at(text, segment.start, config.textDirection).heuristic
+            val layout = build(segment.start, paragraphEndAfter(end, 0), segment.layout.width, heuristic, maxLines = lines)
+            return FlowSegment(layout, segment.left, segment.top, minOf(lines, layout.lineCount), justified)
+        }
+
+        /**
          * Builds a layout of the text from [start] in [span]. Only as much text is laid out as the
          * segment can use, rounded up to whole paragraphs so line breaks are unaffected.
          */
@@ -267,7 +293,13 @@ internal object FlowLayoutEngine {
         // The break strategy, hyphenation frequency and justification mode come from FlowTextView's
         // public properties, which document the platform constants they accept.
         @SuppressLint("WrongConstant")
-        private fun build(start: Int, end: Int, width: Int, heuristic: TextDirectionHeuristic): StaticLayout {
+        private fun build(
+            start: Int,
+            end: Int,
+            width: Int,
+            heuristic: TextDirectionHeuristic,
+            maxLines: Int = Int.MAX_VALUE,
+        ): StaticLayout {
             val builder = StaticLayout.Builder.obtain(text, start, end, paint, width)
                 .setAlignment(config.alignment)
                 .setTextDirection(heuristic)
@@ -279,6 +311,11 @@ internal object FlowLayoutEngine {
                 .setHyphenationFrequency(config.hyphenationFrequency)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 builder.setJustificationMode(config.justificationMode)
+            }
+            if (maxLines != Int.MAX_VALUE) {
+                builder.setMaxLines(maxLines)
+                    .setEllipsize(TextUtils.TruncateAt.END)
+                    .setEllipsizedWidth(width)
             }
             return builder.build()
         }
