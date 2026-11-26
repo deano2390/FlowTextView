@@ -159,6 +159,9 @@ replacements. The behaviour changes and removed APIs are listed in the
 Building
 --------
 
+Building needs JDK 21, which Robolectric needs to run the tests against API 37. The library itself
+targets Java 17.
+
 ```shell
 ./gradlew build                   # tests, screenshot verification, lint and assemble
 ./gradlew :flowtextview-sample:installDebug
