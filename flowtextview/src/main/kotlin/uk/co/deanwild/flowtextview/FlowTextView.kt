@@ -24,6 +24,7 @@ import android.view.View
 import android.view.ViewConfiguration
 import android.widget.RelativeLayout
 import androidx.core.view.ViewCompat
+import androidx.core.view.isGone
 import uk.co.deanwild.flowtextview.internal.FlowLayoutConfig
 import uk.co.deanwild.flowtextview.internal.FlowLayoutEngine
 import uk.co.deanwild.flowtextview.internal.FlowLayoutResult
@@ -246,6 +247,8 @@ public open class FlowTextView @JvmOverloads constructor(
         super.requestLayout()
     }
 
+    // Calling RelativeLayout.onLayout() from onMeasure() is deliberate; see the comment inside.
+    @SuppressLint("WrongCall")
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         val heightMode = MeasureSpec.getMode(heightMeasureSpec)
@@ -436,7 +439,7 @@ public open class FlowTextView @JvmOverloads constructor(
         val obstacles = ArrayList<Obstacle>(childCount)
         for (i in 0 until childCount) {
             val child = getChildAt(i)
-            if (child.visibility == View.GONE) continue
+            if (child.isGone) continue
             val lp = child.layoutParams as? MarginLayoutParams
             obstacles += Obstacle(
                 left = child.left - (lp?.leftMargin ?: 0),
@@ -496,14 +499,7 @@ public open class FlowTextView @JvmOverloads constructor(
             // As in TextView, the text appearance supplies defaults that direct attributes override.
             val appearanceRes = a.getResourceId(R.styleable.FlowTextView_android_textAppearance, 0)
             val style = TextStyle()
-            if (appearanceRes != 0) {
-                val appearance = context.obtainStyledAttributes(appearanceRes, R.styleable.FlowTextViewAppearance)
-                try {
-                    style.read(context, appearance, APPEARANCE_INDICES)
-                } finally {
-                    appearance.recycle()
-                }
-            }
+            if (appearanceRes != 0) style.readTextAppearance(context, appearanceRes)
             style.read(context, a, VIEW_INDICES)
             style.applyTo(this)
 

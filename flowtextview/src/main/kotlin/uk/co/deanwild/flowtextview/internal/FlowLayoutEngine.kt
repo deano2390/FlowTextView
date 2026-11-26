@@ -1,5 +1,6 @@
 package uk.co.deanwild.flowtextview.internal
 
+import android.annotation.SuppressLint
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
@@ -10,6 +11,7 @@ import android.text.TextDirectionHeuristic
 import android.text.TextDirectionHeuristics
 import android.text.TextPaint
 import android.text.TextUtils
+import androidx.core.graphics.withTranslation
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -54,13 +56,12 @@ internal class FlowSegment(
      * (see [Layout.getSelectionPath]) filled with [highlightPaint] behind the text.
      */
     fun draw(canvas: Canvas, highlight: Path? = null, highlightPaint: Paint? = null) {
-        val save = canvas.save()
-        canvas.translate(left.toFloat(), top.toFloat())
-        if (lineCount < layout.lineCount) {
-            canvas.clipRect(-UNBOUNDED, -UNBOUNDED, UNBOUNDED, layout.getLineTop(lineCount).toFloat())
+        canvas.withTranslation(left.toFloat(), top.toFloat()) {
+            if (lineCount < layout.lineCount) {
+                clipRect(-UNBOUNDED, -UNBOUNDED, UNBOUNDED, layout.getLineTop(lineCount).toFloat())
+            }
+            layout.draw(this, highlight, highlightPaint, 0)
         }
-        layout.draw(canvas, highlight, highlightPaint, 0)
-        canvas.restoreToCount(save)
     }
 
     /**
@@ -263,6 +264,9 @@ internal object FlowLayoutEngine {
             return if (newline < 0) text.length else newline + 1
         }
 
+        // The break strategy, hyphenation frequency and justification mode come from FlowTextView's
+        // public properties, which document the platform constants they accept.
+        @SuppressLint("WrongConstant")
         private fun build(start: Int, end: Int, width: Int, heuristic: TextDirectionHeuristic): StaticLayout {
             val builder = StaticLayout.Builder.obtain(text, start, end, paint, width)
                 .setAlignment(config.alignment)

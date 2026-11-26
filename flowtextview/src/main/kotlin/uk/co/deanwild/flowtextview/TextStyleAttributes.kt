@@ -64,6 +64,15 @@ internal class TextStyle {
         if (a.hasValue(i.letterSpacing)) letterSpacing = a.getFloat(i.letterSpacing, 0f)
     }
 
+    fun readTextAppearance(context: Context, appearanceRes: Int) {
+        val appearance = context.obtainStyledAttributes(appearanceRes, R.styleable.FlowTextViewAppearance)
+        try {
+            read(context, appearance, APPEARANCE_INDICES)
+        } finally {
+            appearance.recycle()
+        }
+    }
+
     fun applyTo(view: FlowTextView) {
         textSize?.let { view.textPaint.textSize = it }
         textColors?.let { view.textColors = it }
